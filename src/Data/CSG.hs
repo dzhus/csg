@@ -26,7 +26,7 @@ module Data.CSG
     -- * Ray casting
     , Point
     , Vec3
-    , Ray
+    , Ray(..)
     , HitPoint(..)
     , HitSegment
     , Trace
@@ -50,9 +50,7 @@ import Data.CSG.Util
 
 
 type Vec3 = SVec3
-
 type Matrix = V3.Matrix SVec3
-
 type Point = SVec3
 
 
@@ -162,6 +160,8 @@ type HitSegment = (Pair HitPoint HitPoint)
 -- >                                 |
 -- >                                 |
 -- >                                 # - ray
+--
+-- Full trace contains two segments: @hs1@ and @hs2@.
 type Trace = [HitSegment]
 
 
@@ -175,10 +175,12 @@ infinityN :: Double
 infinityN = -infinityP
 
 
+-- | Hit in negative infinity.
 hitN :: HitPoint
 hitN = (HitPoint infinityN Nothing)
 
 
+-- | Hit in positive infinity.
 hitP :: HitPoint
 hitP = (HitPoint infinityP Nothing)
 
@@ -309,15 +311,15 @@ trace !b@(Plane n d) (Ray (pos, v)) =
           -- If ray is parallel to plane and is inside, then trace is
           -- the whole timeline.
           if inside b pos
-          then [(HitPoint infinityN Nothing) :!: (HitPoint infinityP Nothing)]
+          then [hitN :!: hitP]
           else []
       else
           let
               !t = (pos .* n - d) / f
           in
             if f > 0
-            then [(HitPoint t (Just n)) :!: (HitPoint infinityP Nothing)]
-            else [(HitPoint infinityN Nothing) :!: (HitPoint t (Just n))]
+            then [(HitPoint t (Just n)) :!: hitP]
+            else [hitN :!: (HitPoint t (Just n))]
 
 trace !(Sphere c r) (Ray (pos, v)) =
       let
@@ -370,10 +372,10 @@ trace !(Cone n c _ m ta odelta) (Ray (pos, v)) =
               case ((pos1 .* n - odelta) > 0, (pos2 .* n - odelta) > 0) of
                 (True, True) -> [HitPoint t1 (Just $ normal pos1) :!:
                                  HitPoint t2 (Just $ normal pos2)]
-                (True, False) -> [HitPoint infinityN Nothing :!:
+                (True, False) -> [hitN :!:
                                   HitPoint t1 (Just $ normal pos1)]
                 (False, True) -> [HitPoint t2 (Just $ normal pos2) :!:
-                                  HitPoint infinityP Nothing]
+                                  hitP]
                 (False, False) -> []
 
 trace !(Intersection b1 b2) !p =
