@@ -24,6 +24,9 @@ module Graphics.CSG
     , unite
     , complement
     -- * Ray casting
+    , Point
+    , Vec3
+    , Ray
     , HitPoint(..)
     , HitSegment
     , Trace
@@ -45,39 +48,43 @@ import qualified Data.Vec3 as V3
 
 import Graphics.CSG.Util
 
+
 type Vec3 = SVec3
+
 type Matrix = V3.Matrix SVec3
+
 type Point = SVec3
 
 
--- | Time when particle hits the surface with normal at the hit point.
--- If hit is in infinity, then normal is Nothing.
---
+-- | A ray described by an equation @p(t) = p_0 + v * t@ with an
+-- initial point @p_0@ and a direction @v@. Substituting a specific
+-- time @t'@ in the equation yields a position of a member point
+-- @p(t')@ of the ray.
+newtype Ray = Ray (Point, Vec3)
+
+
+-- | Time at which a ray intersects a surface, with an outward normal
+-- to the surface at the hit point. If hit is in infinity, then normal
+-- is Nothing.
+data HitPoint = HitPoint !Double (Maybe Vec3)
+                deriving (Eq, Show)
 -- Note that this datatype is strict only on first argument: we do not
 -- compare normals when classifying traces and thus do not force
 -- calculation of normals.
-data HitPoint = HitPoint !Double (Maybe Vec3)
-                deriving (Eq, Show)
 
 
 instance Ord HitPoint where
     compare (HitPoint t1 _) (HitPoint t2 _) = compare t1 t2
 
 
--- | A segment on time line when particle is inside the body.
---
--- Using strict tuple performs better: 100 traces for 350K
--- particles perform roughly 7s against 8s with common datatypes.
+-- | A segment of ray inside a body.
 type HitSegment = (Pair HitPoint HitPoint)
 
 
-newtype Particle = Particle (Point, Vec3)
-
-
--- | Trace of a linearly-moving particle on a body is a list of time
--- segments/intervals during which the particle is inside the body.
+-- | Trace of a ray on a body is a list of time segments/intervals
+-- corresponding to portions of ray inside the body.
 --
--- >                       # - particle
+-- >                       # - ray
 -- >                        \
 -- >                         \
 -- >                          o------------
@@ -85,9 +92,9 @@ newtype Particle = Particle (Point, Vec3)
 -- >                    -/      *              \-
 -- >                   /         *               \
 -- >                  (           *  - trace      )
--- >                   \           *             /
+-- >            body - \           *             /
 -- >                    -\          *          /-
--- >       primitive -  ---\         *     /---
+-- >                      ---\       *     /---
 -- >                          --------o----
 -- >                                   \
 -- >                                    \
@@ -97,33 +104,32 @@ newtype Particle = Particle (Point, Vec3)
 --
 -- For example, since a ray intersects a plane only once, a half-space
 -- primitive defined by this plane results in a half-interval trace of
--- a particle:
+-- a ray:
 --
 -- >                                          /
 -- >                                         /
 -- >                                        /
 -- >              #------------------------o*****************>
 -- >              |                       /                  |
--- >           particle                  /            goes to infinity
+-- >             ray                     /            goes to infinity
 -- >                                    /
 -- >                                   /
 -- >                                  /
 -- >                                 / - surface of half-space
 --
 -- Ends of segments or intervals are calculated by intersecting the
--- trajectory ray of a particle and the surface of the primitive. This
--- may be done by substituting the equation of trajectory @X(t) = X_o
--- + V*t@ into the equation which defines the surface and solving it
--- for @t@. If the body is a composition, traces from primitives are
--- then classified according to operations used to define the body
--- (union, intersection or complement).
+-- ray and the surface of the primitive. This is done with the help of
+-- 'trace', which substitutes the equation of ray @p(t) = p_o + v*t@
+-- into the equation which defines the surface and solves it for @t@.
+-- If the body is a composition, traces from primitives are then
+-- classified according to operations used to define the body (union,
+-- intersection or complement).
 --
 -- Although only convex primitives are used in current implementation,
 -- compositions may result in concave bodies, which is why trace is
 -- defined as a list of segments.
 --
---
--- In this example, body is an intersection of a sphere and sphere
+-- In this example, body is an intersection of a sphere and a sphere
 -- complement:
 --
 -- >                                /|\
@@ -155,10 +161,7 @@ newtype Particle = Particle (Point, Vec3)
 -- >                   -----------   |
 -- >                                 |
 -- >                                 |
--- >                                 # - particle
---
--- If only intersections of concave primitives were allowed, then
--- trace type might be simplified to be just a single 'HitSegment'.
+-- >                                 # - ray
 type Trace = [HitSegment]
 
 
@@ -266,8 +269,8 @@ coneFrustum (p1, r1) (p2, r2) =
         height = norm gap
         axis = normalize gap
         -- Calculate distance from pt to apex.
-        dist = if rt == 0 
-               then 0 
+        dist = if rt == 0
+               then 0
                else height / (rb / rt - 1)
         apex = pt <+> (axis .^ dist)
         -- Angle between generatrix and axis
@@ -293,11 +296,11 @@ complement :: Body -> Body
 complement !b = Complement b
 
 
--- | Calculate a trace of a particle on a body.
-trace :: Body -> Particle -> Trace
+-- | Trace of a ray on a body.
+trace :: Body -> Ray -> Trace
 {-# INLINE trace #-}
 
-trace !b@(Plane n d) (Particle (pos, v)) =
+trace !b@(Plane n d) (Ray (pos, v)) =
     let
         !f = -(n .* v)
     in
@@ -316,7 +319,7 @@ trace !b@(Plane n d) (Particle (pos, v)) =
             then [(HitPoint t (Just n)) :!: (HitPoint infinityP Nothing)]
             else [(HitPoint infinityN Nothing) :!: (HitPoint t (Just n))]
 
-trace !(Sphere c r) (Particle (pos, v)) =
+trace !(Sphere c r) (Ray (pos, v)) =
       let
           !d = pos <-> c
           !roots = solveq (v .* v) (v .* d * 2) (d .* d - r * r)
@@ -328,7 +331,7 @@ trace !(Sphere c r) (Particle (pos, v)) =
               [HitPoint t1 (Just $ normal $ moveBy pos v t1) :!:
                HitPoint t2 (Just $ normal $ moveBy pos v t2)]
 
-trace !(Cylinder n c r) (Particle (pos, v)) =
+trace !(Cylinder n c r) (Ray (pos, v)) =
     let
         d = (pos <-> c) >< n
         e = v >< n
@@ -342,7 +345,7 @@ trace !(Cylinder n c r) (Particle (pos, v)) =
             [HitPoint t1 (Just $ normal $ moveBy pos v t1) :!:
                       HitPoint t2 (Just $ normal $ moveBy pos v t2)]
 
-trace !(Cone n c _ m ta odelta) (Particle (pos, v)) =
+trace !(Cone n c _ m ta odelta) (Ray (pos, v)) =
     let
       delta = pos <-> c
       c2 = dotM v     v     m
@@ -459,7 +462,7 @@ complementTrace [] = [hitN :!: hitP]
 {-# INLINE complementTrace #-}
 
 
--- | True if particle is in inside the body.
+-- | True if a point is in inside the body.
 inside :: Body -> Point -> Bool
 {-# INLINE inside #-}
 
@@ -488,7 +491,7 @@ moveBy :: Point
        -- ^ Current position.
        -> Vec3
        -- ^ Velocity.
-       -> Double 
+       -> Double
        -- ^ Time step.
        -> Point
 moveBy !p !v !t = p <+> (v .^ t)
