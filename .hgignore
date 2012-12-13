@@ -1,0 +1,4 @@
+syntax: glob
+
+cabal-dev/*
+dist/*
