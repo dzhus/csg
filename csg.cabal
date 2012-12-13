@@ -15,6 +15,10 @@ source-repository head
   type:     git
   location: http://github.com/dzhus/csg/
 
+flag raycaster
+  description: Build a raycaster executable.
+  default:     False
+
 library
   ghc-options: -Wall -O2 -fllvm
 
@@ -35,3 +39,21 @@ library
     simple-vec3         == 0.2.*,
     strict              == 0.3.*,
     transformers        == 0.3.*
+
+executable csg-raycaster
+  ghc-options: -Wall -O2 -funbox-strict-fields -Odph -rtsopts -threaded -fno-liberate-case -funfolding-use-threshold1000 -funfolding-keeness-factor1000 -fllvm -optlo-O3
+
+  main-is: src/Raycaster.hs
+
+  if flag(raycaster)
+    buildable: True
+    build-depends:
+      base                == 4.6.*,
+      csg,
+      cmdargs             == 0.10.*,
+      gloss               == 1.7.*,
+      gloss-raster        == 1.7.*,
+      simple-vec3         == 0.2.*,
+      strict              == 0.3.*
+  else
+    buildable: False
