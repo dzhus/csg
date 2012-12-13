@@ -9,7 +9,7 @@ routines to compute intersections of such bodies with ray.
 
 -}
 
-module Graphics.CSG
+module Data.CSG
     ( -- * Bodies
       Body
     -- ** Primitives
@@ -46,7 +46,7 @@ import Data.Strict.Tuple
 import Data.Vec3 hiding (Vec3, Matrix)
 import qualified Data.Vec3 as V3
 
-import Graphics.CSG.Util
+import Data.CSG.Util
 
 
 type Vec3 = SVec3
@@ -399,7 +399,7 @@ uniteTraces u (v:t2) =
       uniteTraces (unite1 u v) t2
       where
         merge :: HitSegment -> HitSegment -> HitSegment
-        merge !(a1 :!: b1) !(a2 :!: b2) = (min a1 a2) :!: (max b1 b2)
+        merge (a1 :!: b1) (a2 :!: b2) = (min a1 a2) :!: (max b1 b2)
         {-# INLINE merge #-}
         unite1 :: Trace -> HitSegment -> Trace
         unite1 [] hs = [hs]
@@ -417,7 +417,7 @@ intersectTraces tr1 tr2 =
     let
         -- Overlap two overlapping segments
         overlap :: HitSegment -> HitSegment -> HitSegment
-        overlap !(a1 :!: b1) !(a2 :!: b2) = (max a1 a2) :!: (min b1 b2)
+        overlap (a1 :!: b1) (a2 :!: b2) = (max a1 a2) :!: (min b1 b2)
         {-# INLINE overlap #-}
     in
       case tr2 of

@@ -48,7 +48,7 @@
 -- bottom and top points on cone axis and @r1@, @r2@ are the
 -- corresponding radii.
 
-module Graphics.CSG.Parser
+module Data.CSG.Parser
     ( parseBody
     , parseBodyFile
     )
@@ -71,7 +71,7 @@ import qualified Data.Map as M
 
 import Data.Vec3 hiding (Vec3, Matrix)
 
-import qualified Graphics.CSG as CSG
+import qualified Data.CSG as CSG
 
 
 type Point = SVec3

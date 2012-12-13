@@ -1,8 +1,7 @@
 {-# LANGUAGE BangPatterns #-}
 
-module Graphics.CSG.Util
-    ( SquareRoots
-    , solveq
+module Data.CSG.Util
+    ( solveq
     )
 
 where
@@ -11,9 +10,6 @@ import Prelude hiding (Just, Nothing, Maybe)
 
 import Data.Strict.Maybe
 import Data.Strict.Tuple
-
--- | Results of solving a quadratic equation.
-type SquareRoots = Maybe (Pair Double Double)
 
 
 -- | Solve quadratic equation @ax^2 + bx + c = 0@.
@@ -25,7 +21,7 @@ solveq :: Double
        -- ^ b
        -> Double
        -- ^ c
-       -> SquareRoots
+       -> Maybe (Pair Double Double)
 solveq !a !b !c
     | (d > 0)   = Just $ min r1 r2 :!: max r1 r2
     | otherwise = Nothing
