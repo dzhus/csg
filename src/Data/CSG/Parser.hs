@@ -4,8 +4,9 @@
 -- | Parser for textual CSG body definition format.
 --
 -- Body definition contains a number of solid definitions and ends
--- with the top level object definition. RHS of solid equations may
--- reference other solids to compose into complex bodies.
+-- with the top level object definition, which is the body itself. RHS
+-- of solid equations may reference other solids to allow composing of
+-- complex solids.
 --
 -- Multiple-body compositions are right-associative.
 --
@@ -77,11 +78,11 @@ import qualified Data.CSG as CSG
 type Point = SVec3
 
 
--- | Transformer which adds lookup table to underlying monad.
+-- | Transformer which adds a lookup table to a monad.
 type TableT a k v = StateT (M.Map k v) a
 
 
--- | Add entry to the lookup table.
+-- | Add an entry to the lookup table.
 addEntry :: (Ord k, Monad a) => k -> v -> TableT a k v ()
 addEntry key value = liftM (M.insert key value) get >>= put
 
@@ -91,7 +92,7 @@ getEntry :: (Ord k, Monad a) => k -> TableT a k v (Maybe v)
 getEntry key = liftM (M.lookup key) get
 
 
--- | Parser with lookup table.
+-- | Parser with a lookup table.
 type CSGParser = TableT Parser String CSG.Body
 
 
@@ -245,7 +246,7 @@ body :: CSGParser CSG.Body
 body = union <|> intersection <|> complement <|> uncomposedBody
 
 
--- Used to terminate left branch of binary compositions.
+-- | Used to terminate left branch of binary compositions.
 --
 -- > <uncomposed-body> ::= <primitive> | <reference>
 uncomposedBody :: CSGParser CSG.Body
