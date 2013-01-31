@@ -5,7 +5,8 @@
 Ray-casting routines for constructive solid geometry.
 
 This module provides constructors for complex bodies as well as
-routines to compute intersections of such bodies with ray.
+membership predicates and routines to compute intersections of such
+bodies with a ray.
 
 -}
 
@@ -206,6 +207,7 @@ data Body = Plane !Vec3 !Double
           | Union !Body !Body
           | Intersection !Body !Body
           | Complement !Body
+            deriving Show
 
 
 -- | A half-space defined by an arbitary point on the boundary plane
