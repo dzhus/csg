@@ -10,6 +10,9 @@ Standalone raycaster for CSG objects powered by Gloss.
 
 import Prelude hiding (reverse)
 
+import qualified Data.Strict.Maybe as S
+import qualified Data.Strict.Tuple as S
+
 import GHC.Float
 
 import Graphics.Gloss.Data.Color
@@ -19,9 +22,6 @@ import qualified Graphics.Gloss.Interface.Pure.Game as G
 import Graphics.Gloss.Raster.Field hiding (Point)
 
 import System.Console.CmdArgs.Implicit
-
-import qualified Data.Strict.Maybe as S
-import qualified Data.Strict.Tuple as S
 
 import Data.CSG
 import Data.CSG.Parser
@@ -136,6 +136,10 @@ buildCartesian yaw pitch = (u, v, w)
 {-# INLINE buildCartesian #-}
 
 
+programName :: String
+programName = "csg-raycaster"
+
+
 casterField :: Int
             -- ^ Window width.
             -> Int
@@ -151,7 +155,7 @@ casterField :: Int
             -> IO ()
 casterField width height pixels body bright' dark' =
     let
-        display = InWindow "dsmc-tools CSG raycaster" (width, height) (0, 0)
+        display = InWindow programName (width, height) (0, 0)
         makePixel :: World -> G.Point -> Color
         !wS = fromIntegral (width `div` 2)
         !hS = fromIntegral (height `div` 2)
@@ -202,7 +206,7 @@ main =
                    &= help "Color for surface perpendicular to view plane"
                    &= typ "R,G,B,A"
                  }
-                 &= program "dsmc-caster"
+                 &= program programName
     in do
       Options{..} <- cmdArgs $ sample
       body <- parseBodyFile bodyDef
