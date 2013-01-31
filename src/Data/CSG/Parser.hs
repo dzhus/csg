@@ -275,8 +275,8 @@ geoFile :: CSGParser CSG.Body
 geoFile = (many1 $ lift comment <|> statement) *> topLevel
 
 
--- | Try to read body definition from bytestring. Return body or error
--- message if parsing fails.
+-- | Read body definition. If parsing fails, return error message as a
+-- string.
 parseBody :: ByteString -> Either String CSG.Body
 parseBody input =
     case (parseOnly (runStateT geoFile M.empty) input) of
@@ -284,8 +284,8 @@ parseBody input =
       Left msg -> Left msg
 
 
--- | Read body definition from file. If parsing fails or IOError when
--- reading file occurs, return error message.
+-- | Read body definition from a file. If parsing fails or IOError
+-- when reading file occurs, return error message as a string.
 parseBodyFile :: FilePath -> IO (Either String CSG.Body)
 parseBodyFile file = do
   res <- E.try $ B.readFile file
