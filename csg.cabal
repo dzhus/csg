@@ -57,3 +57,16 @@ executable csg-raycaster
       strict              == 0.3.*
   else
     buildable: False
+
+benchmark csg-benchmark
+   type:    exitcode-stdio-1.0
+   main-is: benchmark/Benchmark.hs
+
+   ghc-options: -Wall -O2 -fllvm -rtsopts
+
+   build-depends:
+     base               == 4.6.*,
+     criterion          == 0.6.*,
+     csg,
+     simple-vec3        == 0.2.*,
+     vector             == 0.10.*
