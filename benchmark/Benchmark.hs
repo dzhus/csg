@@ -85,11 +85,11 @@ testGen rayCount distance = do
 
 
 -- | Test raycasting performance for a body.
-test :: Int 
+test :: Int
      -- ^ Total ray count.
      -> Double
      -- ^ Distance of a plane from the origin.
-     -> Body 
+     -> Body
      -> IO ()
 test rayCount distance body =
     let
