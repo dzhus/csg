@@ -13,9 +13,16 @@ import Data.CSG
 
 body1 :: Body
 body1 = intersect
-        (sphere (fromXYZ (0, 0, 0)) 2.5)
-        (cylinder (fromXYZ (0, 0, 0)) (fromXYZ (0, 0, 1)) 2)
+        (plane origin (fromXYZ (0, -0.5, 1)))
+        (sphere origin 2.5)
 
+
+body2 :: Body
+body2 = intersect
+        (cylinder origin (fromXYZ (1, 0, 0)) 4)
+        (intersect
+         (cylinder origin (fromXYZ (0, 1, 0)) 4)
+         (cylinder origin (fromXYZ (0, 0, 1)) 4))
 
 
 -- | Pixels in meter at unit distance.
@@ -103,8 +110,11 @@ particles = 1000 * 1000
 
 main :: IO ()
 main = defaultMain
-       [ bgroup "Raycasting (10M particles)"
-         [ bench "Gen" $ testGen particles 10
-         , bench "Gen+RC body1" $ test particles 10 body1
+       [ bgroup "Misc"
+         [ bench "Test rays generation (10M)" $ testGen particles 10
+         ]
+       , bgroup "Raycasting"
+         [ bench "body1" $ test particles 10 body1
+         , bench "body2" $ test particles 10 body2
          ]
        ]
