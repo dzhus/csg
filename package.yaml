@@ -1,0 +1,43 @@
+name:       csg
+version:    0.1.0.1
+synopsis:   Analytical CSG (Constructive Solid Geometry) library
+github:     dzhus/csg
+license:    BSD3
+author:     Dmitry Dzhus
+maintainer: <dima@dzhus.org>
+category:   Graphics
+
+ghc-options:
+  - -Wall
+
+dependencies:
+  - attoparsec
+  - base < 5
+  - bytestring
+  - cmdargs
+  - containers
+  - gloss
+  - gloss-raster
+  - simple-vec3
+  - strict
+  - transformers
+
+library:
+  source-dirs: src
+
+benchmarks:
+  csg-benchmark:
+    main: benchmark/Benchmark.hs
+
+    dependencies:
+      - criterion
+      - csg
+      - vector
+
+executables:
+  csg-raycaster:
+    source-dirs: exe
+    main: raycaster.hs
+
+    dependencies:
+      - csg
