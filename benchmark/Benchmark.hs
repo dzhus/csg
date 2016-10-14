@@ -1,7 +1,9 @@
 {-# LANGUAGE BangPatterns #-}
 
-{-
-  Single-threaded benchmark for CSG operations.
+{-|
+
+Single-threaded benchmark for CSG operations.
+
 -}
 
 import Criterion.Main
@@ -62,20 +64,12 @@ generateRayPoints rayCount distance =
       VS.generate (dim * dim) ithRay
 
 
--- | Test how long it takes to generate a vector of initial points for
--- rays using 'generateRayPoints'.
-testGen :: Int -> Double -> IO ()
-testGen rayCount distance = do
-  let !_ = generateRayPoints rayCount distance
-  return ()
-
-
 -- | Test raycasting performance for a body.
 test :: VS.Vector SVec3
      -- ^ Initial points of test rays. Test rays are directed along
      -- the Ox axis.
      -> Body
-     -> IO ()
+     -> VS.Vector Bool
 test rayPoints body =
     let
         !(n, _, _) = buildCartesian 0 0
@@ -84,9 +78,8 @@ test rayPoints body =
             case trace body (Ray (pos, n)) of
               [] -> False
               _  -> True
-    in do
-      let !_ = VS.map posToTrace rayPoints
-      return ()
+    in
+      VS.map posToTrace rayPoints
 
 
 rays :: Int
@@ -114,11 +107,11 @@ main :: IO ()
 main = defaultMain
        [ bgroup "Misc"
          [ bench ("Test rays generation (" ++ show rays ++ ")" ) $
-           testGen rays dist
+           whnf (uncurry generateRayPoints) (rays, dist)
          ]
        , bgroup "Raycasting"
-         [ bench "body1" $ test rs body1
-         , bench "body2" $ test rs body2
+         [ bench "body1" $ whnf (uncurry test) (rs, body1)
+         , bench "body2" $ whnf (uncurry test) (rs, body2)
          ]
        ]
        where
