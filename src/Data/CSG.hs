@@ -40,7 +40,6 @@ where
 
 import Prelude hiding (Just, Nothing, Maybe, fst, snd)
 
-import Data.Functor
 import Data.Strict.Maybe
 import Data.Strict.Tuple
 
