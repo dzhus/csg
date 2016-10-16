@@ -43,12 +43,12 @@ generateRayPoints rayCount distance =
         -- rays. The dimension will most closely fit the required
         -- particle count number without exceeding it
         dim :: Int
-        !dim = floor $ (sqrt $ fromIntegral rayCount :: Double)
+        !dim = floor (sqrt $ fromIntegral rayCount :: Double)
         !halfDim = dim `div` 2
         -- This differs from Raycaster module by a (fromIntegral dim)
         -- term because range for ray index values are integers (as
         -- opposed to (-1,1) used by gloss)
-        !scale = (fromIntegral halfDim) * distance /
+        !scale = fromIntegral halfDim * distance /
                  (resolution * fromIntegral dim)
         -- Initial point of I-th ray on a plane, row-major. 0 ray
         -- starts at (-halfDim, -halfDim).
@@ -90,17 +90,17 @@ dist = 100
 
 
 body1 :: Body
-body1 = intersect
-        (plane origin (fromXYZ (0, -0.5, 1)))
-        (sphere origin 2.5)
+body1 = plane origin (fromXYZ (0, -0.5, 1))
+        `intersect`
+        sphere origin 2.5
 
 
 body2 :: Body
-body2 = intersect
-        (cylinder origin (fromXYZ (1, 0, 0)) 4)
-        (intersect
-         (cylinder origin (fromXYZ (0, 1, 0)) 4)
-         (cylinder origin (fromXYZ (0, 0, 1)) 4))
+body2 = cylinder origin (fromXYZ (1, 0, 0)) 4
+        `intersect`
+        cylinder origin (fromXYZ (0, 1, 0)) 4
+        `intersect`
+        cylinder origin (fromXYZ (0, 0, 1)) 4
 
 
 main :: IO ()
