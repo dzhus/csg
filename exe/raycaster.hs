@@ -103,24 +103,24 @@ handleEvents e w =
            , yaw = 0
            , pitch = 0}
       G.EventMotion p@(x, y) ->
-          case (holdPoint w) of
+          case holdPoint w of
             Nothing -> w
             Just (u, v) ->
                 let
-                    xdelta = (float2Double (x - u)) * dragFactor
-                    ydelta = (float2Double (y - v)) * dragFactor
+                    xdelta = float2Double (x - u) * dragFactor
+                    ydelta = float2Double (y - v) * dragFactor
                 in
-                  case (mode w) of
+                  case mode w of
                     Rotate -> w{ holdPoint = Just p
-                               , yaw = (yaw w) - xdelta
-                               , pitch = (pitch w) + ydelta
+                               , yaw = yaw w - xdelta
+                               , pitch = pitch w + ydelta
                                }
                     Pan ->
                         let
                             !(_, sX, sY) = buildCartesian (yaw w) (pitch w)
                         in
                           w{ holdPoint = Just p
-                           , target = (target w) <+> (sX .^ xdelta) <-> (sY .^ ydelta)
+                           , target = target w <+> (sX .^ xdelta) <-> (sY .^ ydelta)
                            }
                     _ -> w
       _ -> w
@@ -167,14 +167,13 @@ casterField width height pixels body bright' dark' =
                 !(n, sX, sY) = buildCartesian (yaw w) (pitch w)
                 !p = n .^ (-d) <+> target w
                 ray :: Ray
-                !ray = Ray ((p
-                             <+> (sX .^ ((float2Double x) * wScale))
-                             <+> (sY .^ ((float2Double y) * hScale))), n)
-
+                !ray = Ray (p
+                            <+> (sX .^ (float2Double x * wScale))
+                            <+> (sY .^ (float2Double y * hScale)), n)
                 !hp = trace body ray
             in
               case hp of
-                (((S.:!:) (HitPoint _ (S.Just hn)) _):_) ->
+                (S.:!:) (HitPoint _ (S.Just hn)) _:_ ->
                     mixColors factor (1 - factor) bright' dark'
                     where
                       factor = abs $ double2Float $ invert n .* hn
@@ -208,7 +207,7 @@ main =
                  }
                  &= program programName
     in do
-      Options{..} <- cmdArgs $ sample
+      Options{..} <- cmdArgs sample
       body <- parseBodyFile bodyDef
       case body of
         Right b -> casterField width height pixels b
