@@ -177,12 +177,12 @@ infinityN = -infinityP
 
 -- | Hit in negative infinity.
 hitN :: HitPoint
-hitN = (HitPoint infinityN Nothing)
+hitN = HitPoint infinityN Nothing
 
 
 -- | Hit in positive infinity.
 hitP :: HitPoint
-hitP = (HitPoint infinityP Nothing)
+hitP = HitPoint infinityP Nothing
 
 
 -- | CSG body is a recursive composition of primitive objects or other
@@ -219,22 +219,24 @@ plane p n = Plane nn (p .* nn)
 
 -- | A sphere defined by a center point and a radius.
 sphere :: Vec3 -> Double -> Body
-sphere o r = Sphere o r
+sphere = Sphere
 
 
 -- | An infinite circular cylinder defined by two arbitary points on
 -- axis and a radius.
 cylinder :: Point -> Point -> Double -> Body
-cylinder p1 p2 r = Cylinder (normalize $ p2 <-> p1) p1 r
+cylinder p1 p2 = Cylinder (normalize $ p2 <-> p1) p1
 
 
 -- | A finite right circular cylinder defined by two points on its top
 -- and bottom and a radius.
 cylinderFrustum :: Point -> Point -> Double -> Body
 cylinderFrustum pb pt r =
-    intersect (plane pt axis)
-                  (intersect (plane pb $ invert axis)
-                                 (cylinder pb pt r))
+    plane pt axis
+    `intersect`
+    plane pb (invert axis)
+    `intersect`
+    cylinder pb pt r
     where
       axis = pt <-> pb
 
@@ -264,9 +266,9 @@ coneFrustum (p1, r1) (p2, r2) =
     let
         -- Direction from pb to pt is towards apex. Corresponding
         -- radii are rb > rt.
-        (pb, rb, pt, rt) = case (r1 < r2) of
-                             True -> (p2, r2, p1, r1)
-                             False -> (p1, r1, p2, r2)
+        (pb, rb, pt, rt) = if r1 < r2
+                           then (p2, r2, p1, r1)
+                           else (p1, r1, p2, r2)
         -- Cone axis and frustum height
         gap =  pt <-> pb
         height = norm gap
@@ -279,9 +281,11 @@ coneFrustum (p1, r1) (p2, r2) =
         -- Angle between generatrix and axis
         degs = atan (rb / (dist + norm (pt <-> pb))) * (180 / pi)
     in
-      intersect (plane pt axis)
-                    (intersect (plane pb $ invert axis)
-                                   (cone axis apex degs))
+      plane pt axis
+      `intersect`
+      plane pb (invert axis)
+      `intersect`
+      cone axis apex degs
 
 
 -- | Intersection of two bodies.
@@ -303,7 +307,7 @@ complement !b = Complement b
 trace :: Body -> Ray -> Trace
 {-# INLINE trace #-}
 
-trace !b@(Plane n d) (Ray (pos, v)) =
+trace b@(Plane n d) (Ray (pos, v)) =
     let
         !f = -(n .* v)
     in
@@ -311,18 +315,16 @@ trace !b@(Plane n d) (Ray (pos, v)) =
       then
           -- If ray is parallel to plane and is inside, then trace is
           -- the whole timeline.
-          if inside b pos
-          then [hitN :!: hitP]
-          else []
+          [hitN :!: hitP | inside b pos]
       else
           let
               !t = (pos .* n - d) / f
           in
             if f > 0
-            then [(HitPoint t (Just n)) :!: hitP]
-            else [hitN :!: (HitPoint t (Just n))]
+            then [HitPoint t (Just n) :!: hitP]
+            else [hitN :!: HitPoint t (Just n)]
 
-trace !(Sphere c r) (Ray (pos, v)) =
+trace (Sphere c r) (Ray (pos, v)) =
       let
           !d = pos <-> c
           !roots = solveq (v .* v) (v .* d * 2) (d .* d - r * r)
@@ -334,7 +336,7 @@ trace !(Sphere c r) (Ray (pos, v)) =
               [HitPoint t1 (Just $ normal $ moveBy pos v t1) :!:
                HitPoint t2 (Just $ normal $ moveBy pos v t2)]
 
-trace !(Cylinder n c r) (Ray (pos, v)) =
+trace (Cylinder n c r) (Ray (pos, v)) =
     let
         d = (pos <-> c) >< n
         e = v >< n
@@ -348,7 +350,7 @@ trace !(Cylinder n c r) (Ray (pos, v)) =
             [HitPoint t1 (Just $ normal $ moveBy pos v t1) :!:
                       HitPoint t2 (Just $ normal $ moveBy pos v t2)]
 
-trace !(Cone n c _ m ta odelta) (Ray (pos, v)) =
+trace (Cone n c _ m ta odelta) (Ray (pos, v)) =
     let
       delta = pos <-> c
       c2 = dotM v     v     m
@@ -379,19 +381,19 @@ trace !(Cone n c _ m ta odelta) (Ray (pos, v)) =
                                   hitP]
                 (False, False) -> []
 
-trace !(Intersection b1 b2) !p =
+trace (Intersection b1 b2) !p =
     intersectTraces tr1 tr2
         where
           tr1 = trace b1 p
           tr2 = trace b2 p
 
-trace !(Union b1 b2) !p =
+trace (Union b1 b2) !p =
     uniteTraces tr1 tr2
         where
           tr1 = trace b1 p
           tr2 = trace b2 p
 
-trace !(Complement b) !p =
+trace (Complement b) !p =
     complementTrace $ trace b p
 
 
@@ -402,12 +404,12 @@ uniteTraces u (v:t2) =
       uniteTraces (unite1 u v) t2
       where
         merge :: HitSegment -> HitSegment -> HitSegment
-        merge (a1 :!: b1) (a2 :!: b2) = (min a1 a2) :!: (max b1 b2)
+        merge (a1 :!: b1) (a2 :!: b2) = min a1 a2 :!: max b1 b2
         {-# INLINE merge #-}
         unite1 :: Trace -> HitSegment -> Trace
         unite1 [] hs = [hs]
         unite1 t@(hs1@(a1 :!: b1):tr') hs2@(a2 :!: b2)
-            | b1 < a2 = hs1:(unite1 tr' hs2)
+            | b1 < a2 = hs1:unite1 tr' hs2
             | a1 > b2 = hs2:t
             | otherwise = unite1 tr' (merge hs1 hs2)
         {-# INLINE unite1 #-}
@@ -420,7 +422,7 @@ intersectTraces tr1 tr2 =
     let
         -- Overlap two overlapping segments
         overlap :: HitSegment -> HitSegment -> HitSegment
-        overlap (a1 :!: b1) (a2 :!: b2) = (max a1 a2) :!: (min b1 b2)
+        overlap (a1 :!: b1) (a2 :!: b2) = max a1 a2 :!: min b1 b2
         {-# INLINE overlap #-}
     in
       case tr2 of
@@ -428,39 +430,33 @@ intersectTraces tr1 tr2 =
         (hs2@(a2 :!: b2):tr2') ->
             case tr1 of
               [] -> []
-              (hs1@(a1 :!: b1):tr1') ->
-                  case (b1 < a2) of
-                    True -> (intersectTraces tr1' tr2)
-                    False ->
-                        case (b2 < a1) of
-                          True -> intersectTraces tr1 tr2'
-                          False -> (overlap hs1 hs2):(intersectTraces tr1' tr2)
+              (hs1@(a1 :!: b1):tr1') | b1 < a2 -> intersectTraces tr1' tr2
+                                     | b2 < a1 -> intersectTraces tr1 tr2'
+                                     | otherwise -> overlap hs1 hs2:intersectTraces tr1' tr2
 {-# INLINE intersectTraces #-}
 
 
 -- | Complement to a trace (normals flipped).
 complementTrace :: Trace -> Trace
 complementTrace ((sp@(HitPoint ts _) :!: ep):xs) =
-    start ++ (complementTrace' ep xs)
+    start ++ complementTrace' ep xs
     where
       flipNormals :: HitSegment -> HitSegment
-      flipNormals !((HitPoint t1 n1) :!: (HitPoint t2 n2)) =
-          (HitPoint t1 (invert <$> n1)) :!: (HitPoint t2 (invert <$> n2))
+      flipNormals (HitPoint t1 n1 :!: HitPoint t2 n2) =
+          HitPoint t1 (invert <$> n1) :!: HitPoint t2 (invert <$> n2)
       {-# INLINE flipNormals #-}
       -- Start from infinity if first hitpoint is finite
-      start = if (isInfinite ts)
+      start = if isInfinite ts
               then []
               else [flipNormals $ hitN :!: sp]
       complementTrace' :: HitPoint -> Trace -> Trace
       complementTrace' c ((a :!: b):tr) =
           -- Bridge between the last point of the previous segment and
           -- the first point of the next one.
-          (flipNormals (c :!: a)):(complementTrace' b tr)
+          flipNormals (c :!: a):complementTrace' b tr
       complementTrace' a@(HitPoint t _) [] =
           -- End in infinity if last hitpoint is finite
-          if (isInfinite t)
-          then []
-          else [flipNormals (a :!: hitP)]
+          [flipNormals (a :!: hitP) | not (isInfinite t)]
 complementTrace [] = [hitN :!: hitP]
 {-# INLINE complementTrace #-}
 
@@ -469,23 +465,23 @@ complementTrace [] = [hitN :!: hitP]
 inside :: Body -> Point -> Bool
 {-# INLINE inside #-}
 
-inside !(Plane n d) !pos = (pos .* n - d) < 0
+inside (Plane n d) !pos = (pos .* n - d) < 0
 
-inside !(Sphere c r) !pos = (norm $ pos <-> c) < r
+inside (Sphere c r) !pos = norm (pos <-> c) < r
 
-inside !(Cylinder n c r) !pos =
-    (norm $ h <-> (n .^ (h .* n))) < r
+inside (Cylinder n c r) !pos =
+    norm (h <-> (n .^ (h .* n))) < r
     where
       h = pos <-> c
 
-inside !(Cone n c a _ _ _) !pos =
-    (n .* (normalize $ pos <-> c)) > a
+inside (Cone n c a _ _ _) !pos =
+    n .* normalize (pos <-> c) > a
 
-inside !(Intersection b1 b2) !p = inside b1 p && inside b2 p
+inside (Intersection b1 b2) !p = inside b1 p && inside b2 p
 
-inside !(Union b1 b2) !p = inside b1 p || inside b2 p
+inside (Union b1 b2) !p = inside b1 p || inside b2 p
 
-inside !(Complement b) !p = not $ inside b p
+inside (Complement b) !p = not $ inside b p
 
 
 -- | Move point by velocity vector for given time and return new

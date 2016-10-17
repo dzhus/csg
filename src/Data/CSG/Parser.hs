@@ -59,8 +59,6 @@ import Prelude as P
 
 import Control.Applicative
 import qualified Control.Exception as E
-import Control.Monad
-
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State.Strict
 
@@ -83,12 +81,12 @@ type TableT a k v = StateT (M.Map k v) a
 
 -- | Add an entry to the lookup table.
 addEntry :: (Ord k, Monad a) => k -> v -> TableT a k v ()
-addEntry key value = liftM (M.insert key value) get >>= put
+addEntry key value = fmap (M.insert key value) get >>= put
 
 
 -- | Lookup entry in the table.
 getEntry :: (Ord k, Monad a) => k -> TableT a k v (Maybe v)
-getEntry key = liftM (M.lookup key) get
+getEntry key = fmap (M.lookup key) get
 
 
 -- | Parser with a lookup table.
@@ -119,7 +117,7 @@ comma = char ','
 --
 -- > <triple> ::= <double> ',' <double> ',' <double>
 triple :: Parser Point
-triple = liftM fromXYZ $
+triple = fmap fromXYZ $
           (,,) <$> double
                    <*>
                    (skipSpace *> comma *> skipSpace *>
@@ -143,9 +141,9 @@ keywords = [ "solid"
 varName :: CSGParser String
 varName = do
   k <- lift $ many1 (letter_ascii <|> digit)
-  case (P.elem k keywords) of
-    False -> return k
-    True -> fail $ "Unexpected keyword: " ++ k
+  if k `P.elem` keywords
+    then return k
+    else fail ("Unexpected keyword: " ++ k)
 
 
 -- | Lookup body in table by its name or fail if it is undefined.
@@ -263,7 +261,7 @@ topLevel = lift (string "tlo" *> skipSpace) *>
 
 -- | Read one-line comment starting with hash sign.
 comment :: Parser ()
-comment = char '#' >> (manyTill anyChar endOfLine) >> return ()
+comment = char '#' >> manyTill anyChar endOfLine >> return ()
 
 
 -- | Read sequence of statements which define solids, and finally read
@@ -271,14 +269,14 @@ comment = char '#' >> (manyTill anyChar endOfLine) >> return ()
 --
 -- > <geoFile> ::= <statement> <geoFile> | <comment> <geoFile> | <tlo>
 geoFile :: CSGParser CSG.Body
-geoFile = (many1 $ lift comment <|> statement) *> topLevel
+geoFile = many1 (lift comment <|> statement) *> topLevel
 
 
 -- | Read body definition. If parsing fails, return error message as a
 -- string.
 parseBody :: ByteString -> Either String CSG.Body
 parseBody input =
-    case (parseOnly (runStateT geoFile M.empty) input) of
+    case parseOnly (runStateT geoFile M.empty) input of
       Right (b, _) -> Right b
       Left msg -> Left msg
 
