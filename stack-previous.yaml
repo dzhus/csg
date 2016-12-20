@@ -1,0 +1,7 @@
+resolver: lts-6.27
+
+extra-deps:
+- gloss-raster-1.10.2.3
+- gloss-1.10.2.3
+- gloss-rendering-1.10.3.5
+- simple-vec3-0.2
