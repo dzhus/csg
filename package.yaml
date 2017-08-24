@@ -4,7 +4,7 @@ synopsis:   Analytical CSG (Constructive Solid Geometry) library
 github:     dzhus/csg
 license:    BSD3
 author:     Dmitry Dzhus
-maintainer: <dima@dzhus.org>
+maintainer: dima@dzhus.org
 category:   Graphics
 
 ghc-options:
