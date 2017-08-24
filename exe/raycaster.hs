@@ -159,7 +159,7 @@ casterField width height pixels body bright' dark' =
         makePixel :: World -> G.Point -> Color
         !wS = fromIntegral (width `div` 2)
         !hS = fromIntegral (height `div` 2)
-        makePixel !w !(x, y) =
+        makePixel !w (x, y) =
             let
                 !d = dist w
                 !wScale = -(wS * d / scaleFactor)
