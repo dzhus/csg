@@ -1,7 +1,8 @@
-resolver: lts-6.27
+resolver: nightly-2017-07-25
 
 extra-deps:
 - gloss-raster-1.10.2.3
 - gloss-1.10.2.3
 - gloss-rendering-1.10.3.5
+- repa-3.4.1.3
 - simple-vec3-0.2
