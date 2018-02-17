@@ -4,15 +4,15 @@
 
 Ray-casting routines for constructive solid geometry.
 
-This module provides constructors for complex bodies as well as
+This module provides constructors for complex solids as well as
 membership predicates and routines to compute intersections of such
-bodies with a ray.
+solids with a ray.
 
 -}
 
 module Data.CSG
-    ( -- * Bodies
-      Body
+    ( -- * Solids
+      Solid
     -- ** Primitives
     , plane
     , sphere
@@ -32,7 +32,7 @@ module Data.CSG
     , HitSegment
     , Trace
     , trace
-    -- * Body membership
+    -- * Solid membership
     , inside
     )
 
@@ -75,12 +75,12 @@ instance Ord HitPoint where
     compare (HitPoint t1 _) (HitPoint t2 _) = compare t1 t2
 
 
--- | A segment of ray inside a body.
+-- | A segment of ray inside a solid.
 type HitSegment = (Pair HitPoint HitPoint)
 
 
--- | Trace of a ray on a body is a list of time segments/intervals
--- corresponding to portions of ray inside the body.
+-- | Trace of a ray on a solid is a list of time segments/intervals
+-- corresponding to portions of ray inside the solid.
 --
 -- >                       # - ray
 -- >                        \
@@ -90,7 +90,7 @@ type HitSegment = (Pair HitPoint HitPoint)
 -- >                    -/      *              \-
 -- >                   /         *               \
 -- >                  (           *  - trace      )
--- >            body - \           *             /
+-- >            solid - \           *             /
 -- >                    -\          *          /-
 -- >                      ---\       *     /---
 -- >                          --------o----
@@ -119,15 +119,15 @@ type HitSegment = (Pair HitPoint HitPoint)
 -- ray and the surface of the primitive. This is done with the help of
 -- 'trace', which substitutes the equation of ray @p(t) = p_o + v*t@
 -- into the equation which defines the surface and solves it for @t@.
--- If the body is a composition, traces from primitives are then
--- classified according to operations used to define the body (union,
+-- If the solid is a composition, traces from primitives are then
+-- classified according to operations used to define the solid (union,
 -- intersection or complement).
 --
 -- Although only convex primitives are used in current implementation,
--- compositions may result in concave bodies, which is why trace is
+-- compositions may result in concave solids, which is why trace is
 -- defined as a list of segments.
 --
--- In this example, body is an intersection of a sphere and a sphere
+-- In this example, solid is an intersection of a sphere and a sphere
 -- complement:
 --
 -- >                                /|\
@@ -185,9 +185,9 @@ hitP :: HitPoint
 hitP = HitPoint infinityP Nothing
 
 
--- | CSG body is a recursive composition of primitive objects or other
--- bodies.
-data Body = Plane !Vec3 !Double
+-- | CSG solid is a recursive composition of primitive objects or other
+-- solids.
+data Solid = Plane !Vec3 !Double
           -- ^ Half-space defined by a unit outward normal and a
           -- distance of boundary plane from the origin.
           | Sphere !Vec3 !Double
@@ -203,34 +203,34 @@ data Body = Plane !Vec3 !Double
           -- Additionally, a transformation matrix $n * n - cos^2 h$,
           -- tangent of angle and odelta are stored for intersection
           -- calculations.
-          | Union !Body !Body
-          | Intersection !Body !Body
-          | Complement !Body
+          | Union !Solid !Solid
+          | Intersection !Solid !Solid
+          | Complement !Solid
             deriving Show
 
 
 -- | A half-space defined by an arbitary point on the boundary plane
 -- and an outward normal (not necessarily a unit vector).
-plane :: Point -> Vec3 -> Body
+plane :: Point -> Vec3 -> Solid
 plane p n = Plane nn (p .* nn)
             where
               nn = normalize n
 
 
 -- | A sphere defined by a center point and a radius.
-sphere :: Vec3 -> Double -> Body
+sphere :: Vec3 -> Double -> Solid
 sphere = Sphere
 
 
 -- | An infinite circular cylinder defined by two arbitary points on
 -- axis and a radius.
-cylinder :: Point -> Point -> Double -> Body
+cylinder :: Point -> Point -> Double -> Solid
 cylinder p1 p2 = Cylinder (normalize $ p2 <-> p1) p1
 
 
 -- | A finite right circular cylinder defined by two points on its top
 -- and bottom and a radius.
-cylinderFrustum :: Point -> Point -> Double -> Body
+cylinderFrustum :: Point -> Point -> Double -> Solid
 cylinderFrustum pb pt r =
     plane pt axis
     `intersect`
@@ -244,7 +244,7 @@ cylinderFrustum pb pt r =
 -- | An infinite right circular cone defined by an outward axis
 -- vector, an apex point and an angle between the generatrix and the
 -- axis (in degrees, less than 90).
-cone :: Vec3 -> Point -> Double -> Body
+cone :: Vec3 -> Point -> Double -> Solid
 cone a o h =
     let
         rads = h * pi / 180
@@ -261,7 +261,7 @@ cone a o h =
 -- | A conical frustum given by two points on its axis with radii at
 -- that points. One of radii may be zero (in which case one of frustum
 -- ends will be the apex).
-coneFrustum :: (Point, Double) -> (Point, Double) -> Body
+coneFrustum :: (Point, Double) -> (Point, Double) -> Solid
 coneFrustum (p1, r1) (p2, r2) =
     let
         -- Direction from pb to pt is towards apex. Corresponding
@@ -288,23 +288,23 @@ coneFrustum (p1, r1) (p2, r2) =
       cone axis apex degs
 
 
--- | Intersection of two bodies.
-intersect :: Body -> Body -> Body
+-- | Intersection of two solids.
+intersect :: Solid -> Solid -> Solid
 intersect !b1 !b2 = Intersection b1 b2
 
 
--- | Union of two bodies.
-unite :: Body -> Body -> Body
+-- | Union of two solids.
+unite :: Solid -> Solid -> Solid
 unite !b1 !b2 = Union b1 b2
 
 
--- | Complement to a body (normals flipped).
-complement :: Body -> Body
+-- | Complement to a solid (normals flipped).
+complement :: Solid -> Solid
 complement !b = Complement b
 
 
--- | Trace of a ray on a body.
-trace :: Body -> Ray -> Trace
+-- | Trace of a ray on a solid.
+trace :: Solid -> Ray -> Trace
 {-# INLINE trace #-}
 
 trace b@(Plane n d) (Ray (pos, v)) =
@@ -461,8 +461,8 @@ complementTrace [] = [hitN :!: hitP]
 {-# INLINE complementTrace #-}
 
 
--- | True if a point is in inside the body.
-inside :: Body -> Point -> Bool
+-- | True if the point is in inside the solid.
+inside :: Solid -> Point -> Bool
 {-# INLINE inside #-}
 
 inside (Plane n d) !pos = (pos .* n - d) < 0

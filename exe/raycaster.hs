@@ -48,7 +48,7 @@ data World = World { dist :: Double
 
 -- | Static command line options for caster.
 data Options = Options
-    { bodyDef :: FilePath
+    { geoFile :: FilePath
     , width :: Int
     , height :: Int
     , pixels :: Int
@@ -146,14 +146,14 @@ casterField :: Int
             -- ^ Window height.
             -> Int
             -- ^ Pixels per point.
-            -> Body
-            -- ^ Body to show.
+            -> Solid
+            -- ^ Solid to show.
             -> Color
             -- ^ Bright color.
             -> Color
             -- ^ Dark color.
             -> IO ()
-casterField width height pixels body bright' dark' =
+casterField width height pixels solid bright' dark' =
     let
         display = InWindow programName (width, height) (0, 0)
         makePixel :: World -> G.Point -> Color
@@ -170,7 +170,7 @@ casterField width height pixels body bright' dark' =
                 !ray = Ray (p
                             <+> (sX .^ (float2Double x * wScale))
                             <+> (sY .^ (float2Double y * hScale)), n)
-                !hp = trace body ray
+                !hp = trace solid ray
             in
               case hp of
                 (S.:!:) (HitPoint _ (S.Just hn)) _:_ ->
@@ -185,13 +185,13 @@ casterField width height pixels body bright' dark' =
                     (flip const)
 
 
--- | Read body def and program arguments, run the actual caster on
+-- | Read solid def and program arguments, run the actual caster on
 -- success.
 main :: IO ()
 main =
     let
         sample = Options
-                 { bodyDef = def &= argPos 0 &= typ "BODY-FILE"
+                 { geoFile = def &= argPos 0 &= typ "GEO-FILE"
                  , width = 500 &= help "Window width"
                  , height = 500 &= help "Window height"
                  , pixels = 1
@@ -208,9 +208,9 @@ main =
                  &= program programName
     in do
       Options{..} <- cmdArgs sample
-      body <- parseBodyFile bodyDef
-      case body of
+      solid <- parseGeometryFile geoFile
+      case solid of
         Right b -> casterField width height pixels b
                    (uncurry4 makeColor brightRGBA)
                    (uncurry4 makeColor darkRGBA)
-        Left e -> error $ "Problem when reading body definition: " ++ e
+        Left e -> error $ "Problem when reading solid definition: " ++ e

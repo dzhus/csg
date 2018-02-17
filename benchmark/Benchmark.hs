@@ -64,18 +64,18 @@ generateRayPoints rayCount distance =
       VS.generate (dim * dim) ithRay
 
 
--- | Test raycasting performance for a body.
+-- | Test raycasting performance for a solid.
 test :: VS.Vector SVec3
      -- ^ Initial points of test rays. Test rays are directed along
      -- the Ox axis.
-     -> Body
+     -> Solid
      -> VS.Vector Bool
-test rayPoints body =
+test rayPoints solid =
     let
         !(n, _, _) = buildCartesian 0 0
         posToTrace pos =
             -- Only head of trace gets evaluated
-            case trace body (Ray (pos, n)) of
+            case trace solid (Ray (pos, n)) of
               [] -> False
               _  -> True
     in
@@ -89,14 +89,14 @@ dist :: Double
 dist = 100
 
 
-body1 :: Body
-body1 = plane origin (fromXYZ (0, -0.5, 1))
+solid1 :: Solid
+solid1 = plane origin (fromXYZ (0, -0.5, 1))
         `intersect`
         sphere origin 2.5
 
 
-body2 :: Body
-body2 = cylinder origin (fromXYZ (1, 0, 0)) 4
+solid2 :: Solid
+solid2 = cylinder origin (fromXYZ (1, 0, 0)) 4
         `intersect`
         cylinder origin (fromXYZ (0, 1, 0)) 4
         `intersect`
@@ -110,8 +110,8 @@ main = defaultMain
            whnf (uncurry generateRayPoints) (rays, dist)
          ]
        , bgroup "Raycasting"
-         [ bench "body1" $ whnf (uncurry test) (rs, body1)
-         , bench "body2" $ whnf (uncurry test) (rs, body2)
+         [ bench "solid1" $ whnf (uncurry test) (rs, solid1)
+         , bench "solid2" $ whnf (uncurry test) (rs, solid2)
          ]
        ]
        where

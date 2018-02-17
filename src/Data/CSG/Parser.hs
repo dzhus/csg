@@ -1,13 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 
--- | Parser for textual CSG body definition format.
+-- | Parser for textual CSG solid definition format. The format is
+-- inspired by Netgen4 .geo format.
 --
--- Body definition contains a number of solid definitions and ends
--- with the top level object definition, which is the body itself. RHS
--- of solid equations may reference other solids to allow composing of
--- complex solids.
+-- Each definition may contain several solid definitions and ends with
+-- the top level object declaration. Right hand side of solid
+-- equations may reference other solids to allow composing of complex
+-- solids.
 --
--- Multiple-body compositions are right-associative.
+-- Multiple-solid compositions are right-associative.
 --
 -- > # comment
 -- >
@@ -16,10 +17,10 @@
 -- > solid p1 = plane (0, 0, 0; 1, 0, 0);
 -- >
 -- > # define a composition
--- > solid body = b1 and p1;
+-- > solid comp = b1 and p1;
 -- >
 -- > # assign it to be the top level object
--- > tlo body;
+-- > tlo comp;
 --
 -- Statements must end with a semicolon (newlines are optional).
 -- Excessive spaces are ignored.
@@ -49,8 +50,8 @@
 -- corresponding radii.
 
 module Data.CSG.Parser
-    ( parseBody
-    , parseBodyFile
+    ( parseGeometry
+    , parseGeometryFile
     )
 
 where
@@ -90,7 +91,7 @@ getEntry key = fmap (M.lookup key) get
 
 
 -- | Parser with a lookup table.
-type CSGParser = TableT Parser String CSG.Body
+type CSGParser = TableT Parser String CSG.Solid
 
 
 lp :: Parser Char
@@ -146,8 +147,8 @@ varName = do
     else fail ("Unexpected keyword: " ++ k)
 
 
--- | Lookup body in table by its name or fail if it is undefined.
-readName :: CSGParser CSG.Body
+-- | Lookup solid in table by its name or fail if it is undefined.
+readName :: CSGParser CSG.Solid
 readName = do
   k <- varName
   v <- getEntry k
@@ -158,7 +159,7 @@ readName = do
 
 -- > <plane> ::=
 -- >   'plane (' <triple> ';' <triple> ')'
-plane :: Parser CSG.Body
+plane :: Parser CSG.Solid
 plane = CSG.plane <$>
         (string "plane" *> skipSpace *> lp *> skipSpace *> triple) <*>
         (skipSpace *> cancer *> skipSpace *> triple <* skipSpace <* rp)
@@ -166,7 +167,7 @@ plane = CSG.plane <$>
 
 -- > <sphere> ::=
 -- >   'sphere (' <triple> ';' <double> ')'
-sphere :: Parser CSG.Body
+sphere :: Parser CSG.Solid
 sphere = CSG.sphere <$>
         (string "sphere" *> skipSpace *> lp *> skipSpace *> triple) <*>
         (skipSpace *> cancer *> skipSpace *> double <* skipSpace <* rp)
@@ -174,7 +175,7 @@ sphere = CSG.sphere <$>
 
 -- > <cylinder> ::=
 -- >   'cylinder (' <triple> ';' <triple> ';' <double> ')'
-cylinder :: Parser CSG.Body
+cylinder :: Parser CSG.Solid
 cylinder = CSG.cylinderFrustum <$>
            (string "cylinder" *> skipSpace *> lp *> skipSpace *> triple) <*>
            (skipSpace *> cancer *> skipSpace *> triple) <*>
@@ -183,7 +184,7 @@ cylinder = CSG.cylinderFrustum <$>
 
 -- > <cone> ::=
 -- >   'cone (' <triple> ';' <double> ';' <triple> ';' <double> ')'
-cone :: Parser CSG.Body
+cone :: Parser CSG.Solid
 cone = CSG.coneFrustum <$>
        ((,) <$>
         (string "cone" *> skipSpace *> lp *> skipSpace *> triple) <*>
@@ -193,67 +194,67 @@ cone = CSG.coneFrustum <$>
         (skipSpace *> cancer *> skipSpace *> double <* skipSpace <* rp))
 
 
-primitive :: Parser CSG.Body
+primitive :: Parser CSG.Solid
 primitive = plane <|> sphere <|> cylinder <|> cone
 
 
--- > <complement> ::= 'not' <body>
-complement :: CSGParser CSG.Body
-complement = CSG.complement <$> (lift (string "not" *> skipSpace) *> body)
+-- > <complement> ::= 'not' <solid>
+complement :: CSGParser CSG.Solid
+complement = CSG.complement <$> (lift (string "not" *> skipSpace) *> solid)
 
 
--- > <union> ::= <uncomposed-body> 'or' <body>
-union :: CSGParser CSG.Body
+-- > <union> ::= <uncomposed-solid> 'or' <solid>
+union :: CSGParser CSG.Solid
 union = binary "or" CSG.unite
 
 
--- > <intersection> ::= <uncomposed-body> 'and' <body>
-intersection :: CSGParser CSG.Body
+-- > <intersection> ::= <uncomposed-solid> 'and' <solid>
+intersection :: CSGParser CSG.Solid
 intersection = binary "and" CSG.intersect
 
 
 -- | Parse binary operation on two bodies with given composition
 -- operators.
-binary :: ByteString -> (CSG.Body -> CSG.Body -> CSG.Body) -> CSGParser CSG.Body
+binary :: ByteString -> (CSG.Solid -> CSG.Solid -> CSG.Solid) -> CSGParser CSG.Solid
 binary op compose = do
-  b1 <- uncomposedBody
+  b1 <- uncomposedSolid
   lift (skipSpace *> string op *> skipSpace)
-  b2 <- body
+  b2 <- solid
   return $ compose b1 b2
 
 
 -- | Read stamement which adds new solid entry to lookup table.
 --
 -- > <statement> ::=
--- >   'solid' <varname> '=' <body> ';'
+-- >   'solid' <varname> '=' <solid> ';'
 statement :: CSGParser ()
 statement = do
   lift $ string "solid" *> skipSpace
   k <- varName
   lift $ skipSpace <* eq <* skipSpace
-  v <- body <* lift (cancer *> skipSpace)
+  v <- solid <* lift (cancer *> skipSpace)
   addEntry k v
 
 
 -- | Expression is either a primitive, a reference to previously
 -- defined solid or an operation on expressions.
 --
--- > <body> ::= <union> | <intersection> | <complement> | <primitive> | <reference>
-body :: CSGParser CSG.Body
-body = union <|> intersection <|> complement <|> uncomposedBody
+-- > <solid> ::= <union> | <intersection> | <complement> | <primitive> | <reference>
+solid :: CSGParser CSG.Solid
+solid = union <|> intersection <|> complement <|> uncomposedSolid
 
 
 -- | Used to terminate left branch of binary compositions.
 --
--- > <uncomposed-body> ::= <primitive> | <reference>
-uncomposedBody :: CSGParser CSG.Body
-uncomposedBody = lift primitive <|> readName
+-- > <uncomposed-solid> ::= <primitive> | <reference>
+uncomposedSolid :: CSGParser CSG.Solid
+uncomposedSolid = lift primitive <|> readName
 
 
 -- | Top-level object declaration.
 --
--- > <tlo> ::= 'tlo' <body> ';'
-topLevel :: CSGParser CSG.Body
+-- > <tlo> ::= 'tlo' <solid> ';'
+topLevel :: CSGParser CSG.Solid
 topLevel = lift (string "tlo" *> skipSpace) *>
            readName
            <* lift (cancer <* skipSpace)
@@ -268,24 +269,24 @@ comment = char '#' >> manyTill anyChar endOfLine >> return ()
 -- top level object definition.
 --
 -- > <geoFile> ::= <statement> <geoFile> | <comment> <geoFile> | <tlo>
-geoFile :: CSGParser CSG.Body
+geoFile :: CSGParser CSG.Solid
 geoFile = many1 (lift comment <|> statement) *> topLevel
 
 
--- | Read body definition. If parsing fails, return error message as a
+-- | Read solid definition. If parsing fails, return error message as a
 -- string.
-parseBody :: ByteString -> Either String CSG.Body
-parseBody input =
+parseGeometry :: ByteString -> Either String CSG.Solid
+parseGeometry input =
     case parseOnly (runStateT geoFile M.empty) input of
       Right (b, _) -> Right b
       Left msg -> Left msg
 
 
--- | Read body definition from a file. If parsing fails or IOError
--- when reading file occurs, return error message as a string.
-parseBodyFile :: FilePath -> IO (Either String CSG.Body)
-parseBodyFile file = do
+-- | Read solid definition from a file. If parsing fails, return error
+-- message as a string.
+parseGeometryFile :: FilePath -> IO (Either String CSG.Solid)
+parseGeometryFile file = do
   res <- E.try $ B.readFile file
   return $ case res of
-             Right d -> parseBody d
+             Right d -> parseGeometry d
              Left e -> Left $ show (e :: E.IOException)
