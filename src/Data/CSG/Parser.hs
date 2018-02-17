@@ -23,7 +23,7 @@
 -- > tlo comp;
 --
 -- Statements must end with a semicolon (newlines are optional).
--- Excessive spaces are ignored.
+-- Whitespace is ignored.
 --
 -- Top-level object line must reference a previously defined solid.
 --
@@ -114,7 +114,7 @@ comma :: Parser Char
 comma = char ','
 
 
--- | Read comma-separated three doubles into point.
+-- | Read three comma-separated doubles into point.
 --
 -- > <triple> ::= <double> ',' <double> ',' <double>
 triple :: Parser Point
@@ -144,10 +144,11 @@ varName = do
   k <- lift $ many1 (letter_ascii <|> digit)
   if k `P.notElem` keywords
     then return k
-    else fail ("Unexpected keyword: " ++ k)
+    else fail ("Unexpected keyword when reading a solid name: " ++ k)
 
 
--- | Lookup solid in table by its name or fail if it is undefined.
+-- | Look up a solid in the table by its name or fail if it's not
+-- defined yet.
 readName :: CSGParser CSG.Solid
 readName = do
   k <- varName
@@ -223,7 +224,8 @@ binary op compose = do
   return $ compose b1 b2
 
 
--- | Read stamement which adds new solid entry to lookup table.
+-- | Read a stamement which adds a new solid entry to the lookup
+-- table.
 --
 -- > <statement> ::=
 -- >   'solid' <varname> '=' <solid> ';'
