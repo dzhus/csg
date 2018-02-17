@@ -39,6 +39,10 @@ is a point on a plane which defines the half-space and @(nx, ny,
 nz)@ is a normal to the plane (outward to the half-space), not
 necessarily a unit vector.
 
+[Brick] @orthobrick (ax, ay, az; bx, by, bz)@, where @(ax, ay, az)@ is
+a vertex with minimum coordinates and @(bx, by, bz)@ is a vertex with
+maximum coordinates.
+
 [Sphere] @sphere (cx, cy, cz; r)@, where @(cx, cy, cz)@ is a
 central point of a sphere and @r@ is radius.
 
@@ -135,6 +139,7 @@ triple = fmap fromXYZ $
 keywords :: [String]
 keywords = [ "solid"
            , "tlo"
+           , "orthobrick"
            , "plane"
            , "sphere"
            , "cylinder"
@@ -170,6 +175,14 @@ plane = CSG.plane <$>
         (skipSpace *> cancer *> skipSpace *> triple <* skipSpace <* rp)
 
 
+-- > <orthobrick> ::=
+-- >   'orthobrick (' <triple> ';' <triple> ')'
+orthobrick :: Parser CSG.Solid
+orthobrick = CSG.cuboid <$>
+        (string "orthobrick" *> skipSpace *> lp *> skipSpace *> triple) <*>
+        (skipSpace *> cancer *> skipSpace *> triple <* skipSpace <* rp)
+
+
 -- > <sphere> ::=
 -- >   'sphere (' <triple> ';' <double> ')'
 sphere :: Parser CSG.Solid
@@ -200,7 +213,7 @@ cone = CSG.coneFrustum <$>
 
 
 primitive :: Parser CSG.Solid
-primitive = plane <|> sphere <|> cylinder <|> cone
+primitive = plane <|> orthobrick <|> sphere <|> cylinder <|> cone
 
 
 -- > <complement> ::= 'not' <solid>

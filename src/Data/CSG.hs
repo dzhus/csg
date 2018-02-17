@@ -17,9 +17,14 @@ module Data.CSG
     , plane
     , sphere
     , cylinder
-    , cylinderFrustum
     , cone
+    -- ** Complex bodies
+    --
+    -- | These are made of several primitives, but it's very
+    -- convenient to use them in practice.
+    , cuboid
     , coneFrustum
+    , cylinderFrustum
     -- ** Compositions
     , intersect
     , unite
@@ -220,6 +225,28 @@ plane p n = Plane nn (p .* nn)
 -- | A sphere defined by a center point and a radius.
 sphere :: Vec3 -> Double -> Solid
 sphere = Sphere
+
+
+-- | A rectangular cuboid with faces parallel to axes, defined by two
+-- opposite vertices.
+cuboid :: Point -> Point -> Solid
+cuboid p1 p2 =
+  plane p1' (fromXYZ (1, 0, 0))
+  `intersect`
+  plane p1' (fromXYZ (0, 1, 0))
+  `intersect`
+  plane p1' (fromXYZ (0, 0, 1))
+  `intersect`
+  plane p2' (fromXYZ (-1, 0, 0))
+  `intersect`
+  plane p2' (fromXYZ (0, -1, 0))
+  `intersect`
+  plane p2' (fromXYZ (0, 0, -1))
+  where
+    (x1, y1, z1) = toXYZ p1
+    (x2, y2, z2) = toXYZ p2
+    p2' = fromXYZ (min x1 x2, min y1 y2, min z1 z2)
+    p1' = fromXYZ (max x1 x2, max y1 y2, max z1 z2)
 
 
 -- | An infinite circular cylinder defined by two arbitary points on
