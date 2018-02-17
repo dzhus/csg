@@ -62,7 +62,7 @@ import qualified Control.Exception as E
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State.Strict
 
-import Data.Attoparsec.Char8
+import Data.Attoparsec.ByteString.Char8
 import Data.ByteString.Char8 as B
 
 import qualified Data.Map as M
