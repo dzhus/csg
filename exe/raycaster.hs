@@ -8,7 +8,7 @@ Standalone raycaster for CSG objects powered by Gloss.
 
 |-}
 
-import Prelude hiding (reverse)
+import Prelude
 
 import qualified Data.Strict.Maybe as S
 import qualified Data.Strict.Tuple as S

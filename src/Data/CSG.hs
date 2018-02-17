@@ -38,7 +38,7 @@ module Data.CSG
 
 where
 
-import Prelude hiding (Just, Nothing, Maybe, fst, snd)
+import Prelude hiding (Just, Nothing, Maybe)
 
 import Data.Strict.Maybe
 import Data.Strict.Tuple
