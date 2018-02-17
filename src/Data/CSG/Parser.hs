@@ -1,53 +1,57 @@
 {-# LANGUAGE OverloadedStrings #-}
 
--- | Parser for textual CSG solid definition format. The format is
--- inspired by Netgen4 .geo format.
---
--- Each definition may contain several solid definitions and ends with
--- the top level object declaration. Right hand side of solid
--- equations may reference other solids to allow composing of complex
--- solids.
---
--- Multiple-solid compositions are right-associative.
---
--- > # comment
--- >
--- > # define few primitives
--- > solid b1 = sphere (0, 0, 0; 5);
--- > solid p1 = plane (0, 0, 0; 1, 0, 0);
--- >
--- > # define a composition
--- > solid comp = b1 and p1;
--- >
--- > # assign it to be the top level object
--- > tlo comp;
---
--- Statements must end with a semicolon (newlines are optional).
--- Whitespace is ignored.
---
--- Top-level object line must reference a previously defined solid.
---
--- Syntax for primitives follows the signatures of 'CSG' constructors
--- for 'CSG.plane' and 'CSG.sphere', but differs for cylinder and
--- cone, as this module provides access only to frustums
--- ('CSG.cylinderFrustum' and 'CSG.coneFrustum').
---
--- [Half-space] @plane (px, py, pz; nx, ny, nz)@, where @(px, py, pz)@
--- is a point on a plane which defines the half-space and @(nx, ny,
--- nz)@ is a normal to the plane (outward to the half-space), not
--- necessarily a unit vector.
---
--- [Sphere] @sphere (cx, cy, cz; r)@, where @(cx, cy, cz)@ is a
--- central point of a sphere and @r@ is radius.
---
--- [Right circular cylinder] @cylinder (p1x, p1y, p1z; p2x, p2y, p2z;
--- r)@ where @(p1x, p1y, p1z)@ and @(p2x, p2y, p2z)@ are bottom and
--- top points on axis and @r@ is radius.
---
--- [Right circular conical frustum] @cone (p1x, p1y, p1z; r1; p2x,
--- p2y, p2z; r2)@ where @(p1x, p1y, p1z)@ and @(p2x, p2y, p2z)@ are
--- bottom and top points on cone axis and @r1@, @r2@ are the
--- corresponding radii.
+{-|
+
+Parser for CSG solid definition format. The format uses text files and
+is inspired by NETGEN 4.x @.geo@ format.
+
+Each definition may contain several solid definitions and ends with
+the top level object declaration. Right hand side of solid
+equations may reference other solids to allow composing of complex
+solids.
+
+Multiple-solid compositions are right-associative.
+
+> # comment
+>
+> # define several primitives
+> solid b1 = sphere (0, 0, 0; 5);
+> solid p1 = plane (0, 0, 0; 1, 0, 0);
+>
+> # define a composition
+> solid comp = b1 and p1;
+>
+> # make it the top level object
+> tlo comp;
+
+Statements must end with a semicolon (newlines are optional).
+Whitespace is ignored.
+
+Top-level object line must reference a previously defined solid.
+
+Syntax for primitives follows the signatures of 'CSG' constructors
+for 'CSG.plane' and 'CSG.sphere', but differs for cylinder and
+cone, as this module provides access only to frustums
+('CSG.cylinderFrustum' and 'CSG.coneFrustum').
+
+[Half-space] @plane (px, py, pz; nx, ny, nz)@, where @(px, py, pz)@
+is a point on a plane which defines the half-space and @(nx, ny,
+nz)@ is a normal to the plane (outward to the half-space), not
+necessarily a unit vector.
+
+[Sphere] @sphere (cx, cy, cz; r)@, where @(cx, cy, cz)@ is a
+central point of a sphere and @r@ is radius.
+
+[Right circular cylinder] @cylinder (p1x, p1y, p1z; p2x, p2y, p2z;
+r)@ where @(p1x, p1y, p1z)@ and @(p2x, p2y, p2z)@ are bottom and
+top points on axis and @r@ is radius.
+
+[Right circular conical frustum] @cone (p1x, p1y, p1z; r1; p2x,
+p2y, p2z; r2)@ where @(p1x, p1y, p1z)@ and @(p2x, p2y, p2z)@ are
+bottom and top points on cone axis and @r1@, @r2@ are the
+corresponding radii.
+
+-}
 
 module Data.CSG.Parser
     ( parseGeometry
