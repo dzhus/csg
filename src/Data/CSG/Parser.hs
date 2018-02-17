@@ -142,7 +142,7 @@ keywords = [ "solid"
 varName :: CSGParser String
 varName = do
   k <- lift $ many1 (letter_ascii <|> digit)
-  if k `P.elem` keywords
+  if k `P.notElem` keywords
     then return k
     else fail ("Unexpected keyword: " ++ k)
 
