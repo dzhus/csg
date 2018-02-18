@@ -7,6 +7,9 @@ author:     Dmitry Dzhus
 maintainer: dima@dzhus.org
 category:   Graphics
 
+extra-source-files:
+  - CHANGELOG.md
+
 ghc-options:
   - -Wall
   - -Wcompat
