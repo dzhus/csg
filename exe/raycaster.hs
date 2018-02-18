@@ -76,7 +76,7 @@ uncurry4 f (a, b, c, d) = f a b c d
 
 -- |  Scale deltas between hold and release coordinates by this number.
 dragFactor :: Double
-dragFactor = pi / 1800
+dragFactor = pi / 450
 
 
 -- | Change distance by this amount per one mouse wheel step.
