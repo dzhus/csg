@@ -63,11 +63,16 @@ data Options = Options
 -- | Pixels in meter at unit distance.
 scaleFactor :: Double
 scaleFactor = 50.0
+{-# INLINE scaleFactor #-}
+
+
+initialDistance :: Double
+initialDistance = 5
 
 
 -- | Initial world.
 start :: World
-start = World 5 0 0 origin Nothing None
+start = World initialDistance 0 0 origin Nothing None
 
 
 uncurry4 :: (a -> b -> c -> d -> e) -> (a, b, c, d) -> e
@@ -101,7 +106,9 @@ handleEvents e w =
       G.EventKey (G.Char 'r') G.Down _ _ ->
           w{ target = origin
            , yaw = 0
-           , pitch = 0}
+           , pitch = 0
+           , dist = initialDistance
+           }
       G.EventMotion p@(x, y) ->
           case holdPoint w of
             Nothing -> w
