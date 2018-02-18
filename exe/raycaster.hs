@@ -12,7 +12,6 @@ import Prelude hiding (FilePath)
 
 import Control.Applicative
 import qualified Data.Strict.Maybe as S
-import qualified Data.Strict.Tuple as S
 
 import GHC.Float
 import Data.String
@@ -197,10 +196,9 @@ casterField width height pixels solid bright' dark' =
                 !ray = Ray (p
                             <+> (sX .^ (float2Double x * wScale))
                             <+> (sY .^ (float2Double y * hScale)), n)
-                !hp = trace solid ray
             in
-              case hp of
-                (S.:!:) (HitPoint _ (S.Just hn)) _:_ ->
+              case ray `cast` solid of
+                S.Just (HitPoint _ (S.Just hn)) ->
                     mixColors factor (1 - factor) bright' dark'
                     where
                       factor = abs $ double2Float $ invert n .* hn

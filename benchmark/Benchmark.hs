@@ -11,6 +11,7 @@ import Data.Vector.Storable as VS hiding ((++))
 
 import Data.Vec3 hiding (distance)
 import Data.CSG
+import qualified Data.Strict.Maybe as S
 
 
 -- | Pixels in meter at unit distance.
@@ -75,9 +76,9 @@ test rayPoints solid =
         !(n, _, _) = buildCartesian 0 0
         posToTrace pos =
             -- Only head of trace gets evaluated
-            case trace solid (Ray (pos, n)) of
-              [] -> False
-              _  -> True
+            case cast (Ray (pos, n)) solid of
+              S.Nothing -> False
+              _         -> True
     in
       VS.map posToTrace rayPoints
 

@@ -2,7 +2,7 @@
 
 {-|
 
-Ray-casting routines for constructive solid geometry.
+Types and routines for constructive solid geometry.
 
 This module provides constructors for complex solids as well as
 membership predicates and routines to compute intersections of such
@@ -19,16 +19,15 @@ module Data.CSG
     , cylinder
     , cone
     -- ** Complex bodies
-    --
-    -- | These are made of several primitives, but it's very
-    -- convenient to use them in practice.
     , cuboid
     , coneFrustum
     , cylinderFrustum
+
     -- ** Compositions
     , intersect
     , unite
     , complement
+
     -- * Ray casting
     , Point
     , Vec3
@@ -37,7 +36,9 @@ module Data.CSG
     , HitSegment
     , Trace
     , trace
-    -- * Solid membership
+    , cast
+
+    -- * Membership
     , inside
     )
 
@@ -422,6 +423,14 @@ trace (Union b1 b2) !p =
 
 trace (Complement b) !p =
     complementTrace $ trace b p
+
+
+-- | Find the first point where a ray hits a solid, if any.
+cast :: Ray -> Solid -> Maybe HitPoint
+cast r b =
+  case trace b r of
+    (:!:) hp _:_ -> Just hp
+    _            -> Nothing
 
 
 -- | Union of two traces.
