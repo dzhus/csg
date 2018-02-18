@@ -9,6 +9,7 @@ category:   Graphics
 
 ghc-options:
   - -Wall
+  - -Wcompat
 
 dependencies:
   - base < 5
