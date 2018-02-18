@@ -55,9 +55,9 @@ import qualified Data.Vec3 as V3
 import Data.CSG.Util
 
 
-type Vec3 = SVec3
-type Matrix = V3.Matrix SVec3
-type Point = SVec3
+type Vec3   = CVec3
+type Matrix = V3.Matrix CVec3
+type Point  = Vec3
 
 
 -- | A ray described by the equation @p(t) = p_0 + v * t@ with an
