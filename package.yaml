@@ -10,6 +10,7 @@ category:   Graphics
 ghc-options:
   - -Wall
   - -Wcompat
+  - -O2
 
 dependencies:
   - base < 5
@@ -27,8 +28,6 @@ library:
 benchmarks:
   csg-benchmark:
     main: benchmark/Benchmark.hs
-    ghc-options:
-      - -O2
     dependencies:
       - criterion
       - csg
@@ -39,7 +38,6 @@ executables:
     source-dirs: exe
     main: raycaster.hs
     ghc-options:
-      - -O2
       - -threaded
       - -rtsopts
       - '"-with-rtsopts=-N"'
