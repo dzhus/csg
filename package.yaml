@@ -11,23 +11,23 @@ ghc-options:
   - -Wall
 
 dependencies:
-  - attoparsec
   - base < 5
-  - bytestring
-  - containers
-  - gloss
-  - gloss-raster
   - simple-vec3
   - strict
-  - transformers
 
 library:
   source-dirs: src
+  dependencies:
+    - attoparsec
+    - bytestring
+    - containers
+    - transformers
 
 benchmarks:
   csg-benchmark:
     main: benchmark/Benchmark.hs
-
+    ghc-options:
+      - -O2
     dependencies:
       - criterion
       - csg
@@ -44,5 +44,7 @@ executables:
       - '"-with-rtsopts=-N"'
     dependencies:
       - csg
+      - gloss
+      - gloss-raster
       - system-filepath
       - turtle
