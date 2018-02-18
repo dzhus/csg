@@ -60,21 +60,22 @@ type Matrix = V3.Matrix SVec3
 type Point = SVec3
 
 
--- | A ray described by an equation @p(t) = p_0 + v * t@ with an
+-- | A ray described by the equation @p(t) = p_0 + v * t@ with an
 -- initial point @p_0@ and a direction @v@. Substituting a specific
--- time @t'@ in the equation yields a position of a member point
--- @p(t')@ of the ray.
+-- time @t'@ in the equation yields a position of a point @p(t')@ on
+-- the ray.
 newtype Ray = Ray (Point, Vec3)
 
 
--- | Time at which a ray intersects a surface, with an outward normal
--- to the surface at the hit point. If hit is in infinity, then normal
--- is Nothing.
+-- | A point at which a ray intersects a surface, with an outward
+-- normal to the surface at the hit point. If hit is in infinity, then
+-- normal is Nothing.
+--
+-- Note that this datatype is strict only on first argument: we do not
+-- compare normals when combining traces and thus do not force
+-- calculation of normals.
 data HitPoint = HitPoint !Double (Maybe Vec3)
                 deriving (Eq, Show)
--- Note that this datatype is strict only on first argument: we do not
--- compare normals when classifying traces and thus do not force
--- calculation of normals.
 
 
 instance Ord HitPoint where
@@ -85,8 +86,8 @@ instance Ord HitPoint where
 type HitSegment = (Pair HitPoint HitPoint)
 
 
--- | Trace of a ray on a solid is a list of time segments/intervals
--- corresponding to portions of ray inside the solid.
+-- | Trace of a ray on a solid is a list of segments corresponding to
+-- the portions of the ray inside the solid.
 --
 -- >                       # - ray
 -- >                        \
@@ -125,8 +126,9 @@ type HitSegment = (Pair HitPoint HitPoint)
 -- ray and the surface of the primitive. This is done with the help of
 -- 'trace', which substitutes the equation of ray @p(t) = p_o + v*t@
 -- into the equation which defines the surface and solves it for @t@.
+--
 -- If the solid is a composition, traces from primitives are then
--- classified according to operations used to define the solid (union,
+-- combined according to operations used to define the solid (union,
 -- intersection or complement).
 --
 -- Although only convex primitives are used in current implementation,
@@ -136,38 +138,29 @@ type HitSegment = (Pair HitPoint HitPoint)
 -- In this example, solid is an intersection of a sphere and a sphere
 -- complement:
 --
--- >                                /|\
--- >                                 |
--- >                                 |
--- >                                 |
--- >                   -----------   |
--- >              ----/           \--o-
--- >            -/                   * \-
--- >          -/               hs2 - *   \
--- >        -/                       * ---/
--- >       /                         o/
--- >      /                        -/|
--- >     /                        /  |
--- >     |                       /   |
--- >    /                        |   |
--- >    |                       /    |
--- >    |                       |    |
--- >    |                       \    |
--- >    \                        |   |
--- >     |                       \   |
--- >     \                        \  |
--- >      \                        -\|
--- >       \                         o\
--- >        -\                       * ---\
--- >          -\               hs1 - *   /
--- >            -\                   * /-
--- >              ----\           /--o-
--- >                   -----------   |
--- >                                 |
--- >                                 |
--- >                                 # - ray
+-- >                        -------------
+-- >                   ----/             \----
+-- >                 -/                       \-
+-- >               -/                           \-
+-- >             -/          -----------          \-
+-- >            /         --/           \--         \
+-- >           /        -/                 \-        \
+-- >          /        /                     \        \
+-- >         /        /                       \        \
+-- >         |  hs1  /                         \  hs2  |
+-- >    -----+*******+-------------------------+*******+--------->
+-- >    |    |       \                         /       |
+-- >   ray   \        \                       /        /
+-- >          \        \                     /        /
+-- >           \        -\                 /-        /
+-- >            \         --\           /--         /
+-- >             -\          -----------          /-
+-- >               -\                           /-
+-- >                 -\                       /-
+-- >                   ----\             /----
+-- >                        -------------
 --
--- Full trace contains two segments: @hs1@ and @hs2@.
+-- Here, the full trace contains two segments: @hs1@ and @hs2@.
 type Trace = [HitSegment]
 
 
