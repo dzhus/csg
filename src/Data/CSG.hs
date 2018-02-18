@@ -342,7 +342,7 @@ trace b@(Plane n d) (Ray (pos, v)) =
       then
           -- If ray is parallel to plane and is inside, then trace is
           -- the whole timeline.
-          [hitN :!: hitP | inside b pos]
+          [hitN :!: hitP | inside pos b]
       else
           let
               !t = (pos .* n - d) / f
@@ -489,26 +489,26 @@ complementTrace [] = [hitN :!: hitP]
 
 
 -- | True if the point is in inside the solid.
-inside :: Solid -> Point -> Bool
+inside :: Point -> Solid -> Bool
 {-# INLINE inside #-}
 
-inside (Plane n d) !pos = (pos .* n - d) < 0
+inside !pos (Plane n d) = (pos .* n - d) < 0
 
-inside (Sphere c r) !pos = norm (pos <-> c) < r
+inside !pos (Sphere c r) = norm (pos <-> c) < r
 
-inside (Cylinder n c r) !pos =
+inside !pos (Cylinder n c r) =
     norm (h <-> (n .^ (h .* n))) < r
     where
       h = pos <-> c
 
-inside (Cone n c a _ _ _) !pos =
+inside !pos (Cone n c a _ _ _) =
     n .* normalize (pos <-> c) > a
 
-inside (Intersection b1 b2) !p = inside b1 p && inside b2 p
+inside !p (Intersection b1 b2) = inside p b1 && inside p b2
 
-inside (Union b1 b2) !p = inside b1 p || inside b2 p
+inside !p (Union b1 b2) = inside p b1 || inside p b2
 
-inside (Complement b) !p = not $ inside b p
+inside !p (Complement b) = not $ inside p b
 
 
 -- | Move point by velocity vector for given time and return new
