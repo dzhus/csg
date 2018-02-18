@@ -81,9 +81,6 @@ import Data.Vec3 hiding (Vec3, Matrix)
 import qualified Data.CSG as CSG
 
 
-type Point = SVec3
-
-
 -- | Transformer which adds a lookup table to a monad.
 type TableT a k v = StateT (M.Map k v) a
 
@@ -125,7 +122,7 @@ comma = char ','
 -- | Read three comma-separated doubles into point.
 --
 -- > <triple> ::= <double> ',' <double> ',' <double>
-triple :: Parser Point
+triple :: Parser CSG.Point
 triple = fmap fromXYZ $
           (,,) <$> double
                    <*>
