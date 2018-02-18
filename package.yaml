@@ -14,7 +14,6 @@ dependencies:
   - attoparsec
   - base < 5
   - bytestring
-  - cmdargs
   - containers
   - gloss
   - gloss-raster
@@ -45,3 +44,5 @@ executables:
       - '"-with-rtsopts=-N"'
     dependencies:
       - csg
+      - system-filepath
+      - turtle
