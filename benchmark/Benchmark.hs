@@ -7,12 +7,11 @@ Single-threaded benchmark for CSG operations.
 -}
 
 import Criterion.Main
-import Data.Vector.Storable as VS hiding ((++))
+import Data.Vector.Storable as V hiding ((++))
 
-import Data.Vec3 hiding (distance)
 import Data.CSG
 import qualified Data.Strict.Maybe as S
-
+import Data.Vec3 hiding (Vec3, distance)
 
 -- | Pixels in meter at unit distance.
 resolution :: Double
@@ -21,7 +20,7 @@ resolution = 50.0
 
 -- | Build cartesian axes from yaw and pitch with 0 roll. Angles are
 -- in radians.
-buildCartesian :: Double -> Double -> (SVec3, SVec3, SVec3)
+buildCartesian :: Double -> Double -> (Vec3, Vec3, Vec3)
 buildCartesian yaw pitch = (u, v, w)
     where u = fromXYZ (cos yaw * cos pitch, sin yaw * cos pitch, sin pitch)
           v = fromXYZ (- (sin yaw), cos yaw, 0)
@@ -35,7 +34,7 @@ generateRayPoints :: Int
                   -- ^ Total ray count.
                   -> Double
                   -- ^ Distance of a plane from the origin.
-                  -> VS.Vector SVec3
+                  -> V.Vector Vec3
 generateRayPoints rayCount distance =
     let
         !(n, sX, sY) = buildCartesian 0 0
@@ -62,15 +61,15 @@ generateRayPoints rayCount distance =
               ry = fromIntegral $ y - halfDim
         {-# INLINE ithRay #-}
     in
-      VS.generate (dim * dim) ithRay
+      V.generate (dim * dim) ithRay
 
 
 -- | Test raycasting performance for a solid.
-test :: VS.Vector SVec3
+test :: V.Vector Vec3
      -- ^ Initial points of test rays. Test rays are directed along
      -- the Ox axis.
      -> Solid
-     -> VS.Vector Bool
+     -> V.Vector Bool
 test rayPoints solid =
     let
         !(n, _, _) = buildCartesian 0 0
@@ -80,7 +79,7 @@ test rayPoints solid =
               S.Nothing -> False
               _         -> True
     in
-      VS.map posToTrace rayPoints
+      V.map posToTrace rayPoints
 
 
 rays :: Int
