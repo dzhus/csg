@@ -98,10 +98,10 @@ solid1 = plane origin (fromXYZ (0, -0.5, 1))
 
 solid2 :: Solid
 solid2 = cylinder origin (fromXYZ (1, 0, 0)) 4
-        `intersect`
-        cylinder origin (fromXYZ (0, 1, 0)) 4
-        `intersect`
-        cylinder origin (fromXYZ (0, 0, 1)) 4
+         `intersect`
+         cylinder origin (fromXYZ (0, 1, 0)) 4
+         `intersect`
+         cylinder origin (fromXYZ (0, 0, 1)) 4
 
 
 main :: IO ()
