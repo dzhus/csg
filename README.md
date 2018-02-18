@@ -76,17 +76,17 @@ There're other Haskell libraries for CSG:
 
 - [implicit][]:
 
-      - Offers a much richer operation set
+    - Offers a much richer operation set
 
-      - Uses marching cubes for ray casting (linear surface
-        interpolation)
+    - Uses marching cubes for ray casting (linear surface
+      interpolation)
 
 - [mecha][]:
 
-      - Only provides types and functions to define solids and export
+    - Only provides types and functions to define solids and export
         definition to external formats
 
-      - No support for ray casting
+    - No support for ray casting
 
 [csg-wiki]: https://en.wikipedia.org/wiki/Constructive_solid_geometry
 [hackage-doc]: http://hackage.haskell.org/package/csg/docs/Data-CSG.html
