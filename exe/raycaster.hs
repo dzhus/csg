@@ -16,6 +16,7 @@ import qualified Data.Strict.Maybe as S
 import GHC.Float
 import Data.String
 import Data.Monoid
+import Data.Version
 
 import Graphics.Gloss.Data.Color
 import Graphics.Gloss.Data.Display
@@ -31,6 +32,7 @@ import Data.CSG
 import Data.CSG.Parser
 import Data.Vec3 hiding (Vec3)
 
+import Paths_csg
 
 data InteractionMode = None | Rotate | Pan
 
@@ -163,7 +165,7 @@ buildCartesian yaw pitch = (u, v, w)
 
 
 programName :: String
-programName = "csg-raycaster"
+programName = "csg-raycaster " ++ showVersion version
 
 
 casterField :: Int
