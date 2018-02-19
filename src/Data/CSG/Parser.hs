@@ -245,7 +245,7 @@ binary op compose = do
 -- >   'solid' <varname> '=' <solid> ';'
 statement :: CSGParser ()
 statement = do
-  lift $ string "solid" *> skipSpace
+  lift $ skipSpace *> string "solid" *> skipSpace
   k <- varName
   lift $ skipSpace <* eq <* skipSpace
   v <- solid <* lift (cancer *> skipSpace)
