@@ -22,7 +22,7 @@ The package also includes `csg-raycaster` executable, which is a
 simple interactive GUI for the ray casting algorithm.
 
 `csg-raycaster` requires a geometry defintion file as input. See
-[`cube.geo`](cube.geo):
+[`cube.geo`](examples/cube.geo):
 
 ```
 solid box = orthobrick (-15, -15, -15; 15, 15, 15);
