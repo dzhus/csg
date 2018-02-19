@@ -17,7 +17,7 @@ ghc-options:
 
 dependencies:
   - base < 5
-  - simple-vec3
+  - simple-vec3 >= 0.3.1
   - strict
 
 library:
