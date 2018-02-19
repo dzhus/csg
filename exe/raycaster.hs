@@ -30,7 +30,6 @@ import Filesystem.Path.CurrentOS
 
 import Data.CSG
 import Data.CSG.Parser
-import Data.Vec3 hiding (Vec3)
 
 import Paths_csg
 

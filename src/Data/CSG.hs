@@ -40,6 +40,8 @@ module Data.CSG
 
     -- * Membership
     , inside
+
+    , module V3
     )
 
 where

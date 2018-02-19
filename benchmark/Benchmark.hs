@@ -8,10 +8,9 @@ Single-threaded benchmark for CSG operations.
 
 import Criterion.Main
 import Data.Vector.Storable as V hiding ((++))
-
-import Data.CSG
 import qualified Data.Strict.Maybe as S
-import Data.Vec3 hiding (Vec3, distance)
+
+import Data.CSG hiding (distance)
 
 -- | Pixels in meter at unit distance.
 resolution :: Double
