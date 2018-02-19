@@ -10,8 +10,6 @@ the top level object declaration. Right hand side of solid
 equations may reference other solids to allow composing of complex
 solids.
 
-Multiple-solid compositions are right-associative.
-
 > # comment
 >
 > # define several primitives
@@ -26,6 +24,10 @@ Multiple-solid compositions are right-associative.
 
 Statements must end with a semicolon (newlines are optional).
 Whitespace is ignored.
+
+Multiple-solid compositions are __right-associative__, so @b1 and b2
+or b3@ really means @b1 and (b2 or b3)@. Keep simpler objects on the
+left and when in doubt stick to combining two solids at a time.
 
 Top-level object line must reference a previously defined solid.
 
@@ -230,6 +232,12 @@ intersection = binary "and" CSG.intersect
 
 -- | Parse binary operation on two bodies with given composition
 -- operators.
+--
+-- Note that due to the way 'binary' and 'solid' combinators recurse
+-- into each other multi-solid composition chains are
+-- __right-associative__. However, this also means that if we keep
+-- simpler solids on the left then ray casting routines will have a
+-- chance to work faster and terminate earlier.
 binary :: ByteString -> (CSG.Solid -> CSG.Solid -> CSG.Solid) -> CSGParser CSG.Solid
 binary op compose = do
   b1 <- uncomposedSolid
