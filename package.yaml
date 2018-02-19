@@ -39,6 +39,16 @@ benchmarks:
       - csg
       - vector
 
+tests:
+  csg-tests:
+    source-dirs: tests
+    main: Main.hs
+    dependencies:
+      - bytestring
+      - csg
+      - tasty
+      - tasty-hunit
+
 executables:
   csg-raycaster:
     source-dirs: exe

@@ -207,7 +207,7 @@ data Solid = Plane !Vec3 !Double
           | Union !Solid !Solid
           | Intersection !Solid !Solid
           | Complement !Solid
-            deriving Show
+            deriving (Eq, Show)
 
 
 -- | A half-space defined by an arbitary point on the boundary plane
