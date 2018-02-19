@@ -78,13 +78,15 @@ There're other Haskell libraries for CSG:
 
     - Offers a much richer operation set
 
-    - Uses marching cubes for ray casting (linear surface
-      interpolation)
+    - Uses function representation for CSG solids
+
+    - If `implicit` had ray-casting support in early 2012 then I
+      probably wouldn't write `csg`.
 
 - [mecha][]:
 
     - Only provides types and functions to define solids and export
-        definition to external formats
+      definitions to external formats
 
     - No support for ray casting
 
