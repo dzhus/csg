@@ -21,19 +21,19 @@ See [alternatives](#alternatives) too.
 The package also includes `csg-raycaster` executable, which is a
 simple interactive GUI for the ray casting algorithm.
 
-`csg-raycaster` requires a geometry defintion file as input. See
+`csg-raycaster` takes a geometry defintion file as input. See
 [`cube.geo`](examples/cube.geo):
 
 ```
-solid box = orthobrick (-15, -15, -15; 15, 15, 15);
+solid box = orthobrick (-150, -150, -150; 150, 150, 150);
 
-solid rounded = sphere (0, 0, 0; 20);
+solid rounded = sphere (0, 0, 0; 200);
 
 solid roundedbox = rounded and box;
 
-solid cylinder1 = cylinder (-16, 0, 0; 16, 0, 0; 10);
-solid cylinder2 = cylinder (0, -16, 0; 0, 16, 0; 10);
-solid cylinder3 = cylinder (0, 0, -16; 0, 0, 16; 10);
+solid cylinder1 = cylinder (-160, 0, 0; 160, 0, 0; 100);
+solid cylinder2 = cylinder (0, -160, 0; 0, 160, 0; 100);
+solid cylinder3 = cylinder (0, 0, -160; 0, 0, 160; 100);
 
 solid cross = cylinder1 or cylinder2 or cylinder3;
 
@@ -56,6 +56,9 @@ csg-raycaster cube.geo
 Run as `csg-raycaster --help` to see all options.
 
 ![csg-raycaster demo](csg-raycaster.gif)
+
+When run without a file argument, `csg-raycaster` will try to display
+an arbitrary CSG solid.
 
 In the GUI window the following controls are supported:
 

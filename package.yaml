@@ -65,5 +65,6 @@ executables:
       - gloss
       - gloss-raster
       - system-filepath
+      - QuickCheck
       - strict
       - turtle

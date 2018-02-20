@@ -24,6 +24,7 @@ import qualified Graphics.Gloss.Data.Point as G
 import qualified Graphics.Gloss.Interface.Pure.Game as G
 import Graphics.Gloss.Raster.Field hiding (Point)
 
+import Test.QuickCheck hiding ((><))
 import Turtle.Options
 
 import Filesystem.Path.CurrentOS
@@ -53,7 +54,7 @@ data World = World { dist :: Double
 
 -- | Command line options for caster.
 data Options = Options
-    { geoFile    :: FilePath
+    { geoFile    :: Maybe FilePath
     , width      :: Int
     , height     :: Int
     , pixels     :: Int
@@ -66,7 +67,7 @@ data Options = Options
 
 optParser :: Parser Options
 optParser = Options
-  <$> argPath "geo-file" "Geometry definition file"
+  <$> optional (argPath "geo-file" "Geometry definition file")
   <*> (optInt "width" 'w' "Window width" <|> pure 500)
   <*> (optInt "height" 'h' "Window height" <|> pure 500)
   <*> (optInt "pixels" 'p' "Pixels per ray (set to 1 for top quality)"
@@ -87,7 +88,7 @@ scaleFactor = 50.0
 
 
 initialDistance :: Double
-initialDistance = 5
+initialDistance = 50
 
 
 -- | Initial world.
@@ -101,12 +102,12 @@ uncurry4 f (a, b, c, d) = f a b c d
 
 -- |  Scale deltas between hold and release coordinates by this number.
 dragFactor :: Double
-dragFactor = pi / 450
+dragFactor = pi / 180
 
 
 -- | Change distance by this amount per one mouse wheel step.
 zoomFactor :: Double
-zoomFactor = 0.01
+zoomFactor = 0.1
 
 
 -- | Handle mouse drag to change pitch & yaw and mouse wheel to zoom.
@@ -216,9 +217,14 @@ casterField width height pixels solid bright' dark' =
 main :: IO ()
 main = do
     Options{..} <- options (fromString programName) optParser
-    solid <- parseGeometryFile (encodeString geoFile)
+    solid <-
+      case geoFile of
+        Nothing -> Right <$> generate arbitrary
+        Just fp -> parseGeometryFile (encodeString fp)
     case solid of
-        Right b -> casterField width height pixels b
-                   (uncurry4 makeColor brightRGBA)
-                   (uncurry4 makeColor darkRGBA)
+        Right b -> do
+          putStrLn $ "Rendering " <> show b
+          casterField width height pixels b
+            (uncurry4 makeColor brightRGBA)
+            (uncurry4 makeColor darkRGBA)
         Left e -> error $ "Problem when reading solid definition: " ++ e
