@@ -1,6 +1,7 @@
 resolver: nightly-2017-07-25
 
 extra-deps:
+- doctest-discover-0.1.0.8
 - gloss-raster-1.10.2.3
 - gloss-1.10.2.3
 - gloss-rendering-1.10.3.5

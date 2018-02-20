@@ -50,6 +50,14 @@ tests:
       - tasty-hunit
       - tasty-quickcheck
 
+  csg-doctests:
+    source-dirs: tests
+    main: doctest-driver.hs
+    ghc-options: -threaded
+    dependencies:
+      - doctest
+      - doctest-discover >= 0.1.0.8
+
 executables:
   csg-raycaster:
     source-dirs: exe

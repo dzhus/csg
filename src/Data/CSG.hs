@@ -11,24 +11,27 @@ solids with a ray.
 -}
 
 module Data.CSG
-    ( -- * Solids
+    ( -- * Examples
+      -- $examples
+      -- * Solids
       Solid
-    -- ** Primitives
+      -- ** Primitives
     , plane
     , sphere
     , cylinder
     , cone
-    -- ** Complex solids
+      -- ** Complex solids
     , cuboid
     , coneFrustum
     , cylinderFrustum
 
-    -- ** Operations
+      -- ** Operations
     , intersect
     , unite
     , complement
+    , subtract
 
-    -- * Ray casting
+      -- * Ray casting
     , Point
     , Vec3
     , Ray(..)
@@ -38,7 +41,7 @@ module Data.CSG
     , trace
     , cast
 
-    -- * Membership
+      -- * Membership
     , inside
 
     , module V3
@@ -46,7 +49,7 @@ module Data.CSG
 
 where
 
-import Prelude hiding (Just, Nothing, Maybe)
+import Prelude hiding (Just, Nothing, Maybe, subtract)
 
 import Data.Strict.Maybe
 import Data.Strict.Tuple
@@ -54,6 +57,39 @@ import Test.QuickCheck (Arbitrary(..), frequency, sized)
 
 import Data.Vec3 hiding (Vec3, Matrix)
 import qualified Data.Vec3 as V3
+
+
+-- $examples
+--
+-- "Data.CSG" uses 'CVec3' to represent vectors and points:
+--
+-- >>> let p1 = fromXYZ (5, -6.5, -5)
+-- >>> toXYZ (origin :: Point)
+-- (0.0,0.0,0.0)
+--
+-- Define some solids:
+--
+-- >>> let s = sphere origin 5.0
+-- >>> let b = cuboid (fromXYZ (-1, -1, -1)) (fromXYZ (1, 1, 1))
+--
+-- See "Data.CSG.Parser" for a non-programmatic way to define solids.
+--
+-- Test if a point is inside the solid:
+--
+-- >>> origin `inside` (s `intersect` b)
+-- True
+--
+-- >>> origin `inside` (s `subtract` b)
+-- False
+--
+-- Find the distance to the next intersection of a ray with a solid, along with the
+-- surface normal:
+--
+-- >>> let axis = fromXYZ (1, 2, 10)
+-- >>> let solid = cylinder origin axis 2.0 `intersect` sphere origin 3.5
+-- >>> let ray = Ray (p1, origin <-> p1)
+-- >>> ray `cast` solid
+-- Just (HitPoint 0.7422558525331708 (Just (CVec3 0.7155468474912454 (-0.6952955216188516) 6.750441957464598e-2)))
 
 
 type Point  = Vec3
@@ -354,6 +390,11 @@ unite !b1 !b2 = Union b1 b2
 -- | Complement to a solid (normals flipped).
 complement :: Solid -> Solid
 complement !b = Complement b
+
+
+-- | Subtract a solid from another.
+subtract :: Solid -> Solid -> Solid
+subtract !b1 !b2 = intersect b1 $ complement b2
 
 
 -- | Trace of a ray on a solid.
