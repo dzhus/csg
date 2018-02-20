@@ -1,7 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 import Data.ByteString.Char8 as B
 import Test.Tasty
+import Test.Tasty.QuickCheck
 import Test.Tasty.HUnit
 
 import Data.CSG
@@ -20,6 +22,9 @@ tests =
           cutout = complement cross
           top = rounded `intersect` cutout
       parseGeometry f @=? Right top
+  , testProperty "CSG complement membership"
+    (\(b :: Solid) (p :: Point) ->
+       p `inside` b == not (p `inside` complement b))
   ]
 
 main :: IO ()

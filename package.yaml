@@ -29,6 +29,7 @@ library:
     - bytestring
     - containers
     - strict
+    - QuickCheck
     - transformers
 
 benchmarks:
@@ -49,6 +50,7 @@ tests:
       - csg
       - tasty
       - tasty-hunit
+      - tasty-quickcheck
 
 executables:
   csg-raycaster:

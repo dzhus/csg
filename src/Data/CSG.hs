@@ -50,6 +50,7 @@ import Prelude hiding (Just, Nothing, Maybe)
 
 import Data.Strict.Maybe
 import Data.Strict.Tuple
+import Test.QuickCheck (Arbitrary(..), frequency, sized)
 
 import Data.Vec3 hiding (Vec3, Matrix)
 import qualified Data.Vec3 as V3
@@ -209,6 +210,29 @@ data Solid = Plane !Vec3 !Double
           | Complement !Solid
             deriving (Eq, Show)
 
+
+instance Arbitrary Solid where
+  -- There's got to be a nicer way to write this.
+  --
+  -- We can't use generic-random here because Solid fields must be
+  -- populated by smart constructors. Generating them independently
+  -- will break internal assumptions (such as normals being unit
+  -- vectors or the way matrix field for Cone is populated).
+  arbitrary = sized $ \n ->
+    frequency $
+    [ (4, sphere <$> arbitrary <*> arbitrary)
+    , (4, cuboid <$> arbitrary <*> arbitrary)
+    , (3, cylinder <$> arbitrary <*> arbitrary <*> arbitrary)
+    , (3, cone <$> arbitrary <*> arbitrary <*> arbitrary)
+    , (3, cylinderFrustum <$> arbitrary <*> arbitrary <*> arbitrary)
+    , (3, coneFrustum <$> arbitrary <*> arbitrary)
+    ] ++
+    -- Recurse
+    if n == 0 then [] else
+      [ (8, unite <$> arbitrary <*> arbitrary)
+      , (3, intersect <$> arbitrary <*> arbitrary)
+      , (3, complement <$> arbitrary)
+      ]
 
 -- | A half-space defined by an arbitary point on the boundary plane
 -- and an outward normal (not necessarily a unit vector).
