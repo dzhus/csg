@@ -81,14 +81,14 @@ optParser = Options
        <|> pure (0, 0, 0, 1))
 
 
--- | Pixels in meter at unit distance.
+-- | The factor between distance and view port width/height.
 scaleFactor :: Double
-scaleFactor = 50.0
+scaleFactor = 225.0
 {-# INLINE scaleFactor #-}
 
 
 initialDistance :: Double
-initialDistance = 50
+initialDistance = 225
 
 
 -- | Initial world.

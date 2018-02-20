@@ -450,12 +450,23 @@ trace (Complement b) !p =
     complementTrace $ trace b p
 
 
--- | Find the first point where a ray hits a solid, if any.
+-- | Find the next point where a ray hits a solid, if any.
+--
+-- Here we consider only future intersections: the 'HitPoint' is
+-- guaranteed to have non-negative distance (unlike when using
+-- 'trace').
+--
+-- This means that if the ray starts inside the solid the only way to
+-- tell that from 'cast' result is to compare it's direction and the
+-- surface normal at the hit point.
 cast :: Ray -> Solid -> Maybe HitPoint
 cast r b =
-  case trace b r of
-    (:!:) hp _:_ -> Just hp
-    _            -> Nothing
+  case intersectTraces onlyFutureHits (trace b r) of
+    (:!:) hp@(HitPoint _ (Just _))                        _ : _ -> Just hp
+    (:!:)     (HitPoint _ Nothing) hp@(HitPoint _ (Just _)) : _ -> Just hp
+    _                                                           -> Nothing
+    where
+      onlyFutureHits = [HitPoint 0 Nothing :!: HitPoint infinityP Nothing]
 
 
 -- | Union of two traces.
