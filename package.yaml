@@ -22,8 +22,6 @@ dependencies:
 
 library:
   source-dirs: src
-  other-modules:
-    - Data.CSG.Util
   dependencies:
     - attoparsec
     - bytestring

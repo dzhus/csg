@@ -55,8 +55,6 @@ import Test.QuickCheck (Arbitrary(..), frequency, sized)
 import Data.Vec3 hiding (Vec3, Matrix)
 import qualified Data.Vec3 as V3
 
-import Data.CSG.Util
-
 
 type Point  = Vec3
 type Vec3   = CVec3
@@ -313,7 +311,7 @@ cone a o h =
       Cone n o h' m ta odelta
 
 
--- | A conical frustum given by two points on its axis with radii at
+-- | A conical frustum defined by two points on its axis with radii at
 -- that points. One of radii may be zero (in which case one of frustum
 -- ends will be the apex).
 coneFrustum :: (Point, Double) -> (Point, Double) -> Solid
@@ -558,3 +556,27 @@ moveBy :: Point
        -> Point
 moveBy !p !v !t = p <+> (v .^ t)
 {-# INLINE moveBy #-}
+
+
+-- | Solve quadratic equation @ax^2 + bx + c = 0@.
+--
+-- If less than two roots exist, Nothing is returned.
+solveq :: Double
+       -- ^ a
+       -> Double
+       -- ^ b
+       -> Double
+       -- ^ c
+       -> Maybe (Pair Double Double)
+solveq !a !b !c
+    | d > 0     = Just $ min r1 r2 :!: max r1 r2
+    | otherwise = Nothing
+    where
+      d  =   b * b - 4 * a * c
+      q  =   sqrt d
+      t  =   2 * a
+      r  = - b / t
+      s  =   q / t
+      r1 =   r - s
+      r2 =   r + s
+{-# INLINE solveq #-}
