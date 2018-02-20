@@ -18,12 +18,12 @@ module Data.CSG
     , sphere
     , cylinder
     , cone
-    -- ** Complex bodies
+    -- ** Complex solids
     , cuboid
     , coneFrustum
     , cylinderFrustum
 
-    -- ** Compositions
+    -- ** Operations
     , intersect
     , unite
     , complement
@@ -58,21 +58,24 @@ import qualified Data.Vec3 as V3
 import Data.CSG.Util
 
 
+type Point  = Vec3
 type Vec3   = CVec3
 type Matrix = V3.Matrix CVec3
-type Point  = Vec3
 
 
 -- | A ray described by the equation @p(t) = p_0 + v * t@ with an
 -- initial point @p_0@ and a direction @v@. Substituting a specific
 -- time @t'@ in the equation yields a position of a point @p(t')@ on
--- the ray.
+-- the ray. For negative values of @t'@, position precedes the initial
+-- point.
 newtype Ray = Ray (Point, Vec3)
 
 
--- | A point at which a ray intersects a surface, with an outward
--- normal to the surface at the hit point. If hit is in infinity, then
--- normal is Nothing.
+-- | A point at which a ray intersects a surface, given as a distance
+-- from the ray's initial point and an outward normal to the surface
+-- at the hit point. If hit is in infinity, then normal is 'Nothing'.
+-- If the hit occures on the same line but precedes the initial point
+-- of the ray, the distance is negative.
 --
 -- Note that this datatype is strict only on first argument: we do not
 -- compare normals when combining traces and thus do not force
@@ -89,35 +92,42 @@ instance Ord HitPoint where
 type HitSegment = (Pair HitPoint HitPoint)
 
 
--- | Trace of a ray on a solid is a list of segments corresponding to
--- the portions of the ray inside the solid.
+-- | Trace of a ray/line on a solid is a list of segments
+-- corresponding to the portions of the ray inside the solid.
 --
--- >                       # - ray
+-- >                       O - ray
 -- >                        \
 -- >                         \
--- >                          o------------
+-- >                          +------------
 -- >                      ---/ *           \---
 -- >                    -/      *              \-
 -- >                   /         *               \
 -- >                  (           *  - trace      )
--- >            solid - \           *             /
+-- >            solid -\           *             /
 -- >                    -\          *          /-
 -- >                      ---\       *     /---
--- >                          --------o----
+-- >                          --------+----
 -- >                                   \
 -- >                                    \
 -- >                                    _\/
 -- >                                      \
 --
+-- Each 'HitSegment' is defined by a pair of 'HitPoint's on the ray
+-- line.
 --
--- For example, since a ray intersects a plane only once, a half-space
--- primitive defined by this plane results in a half-interval trace of
--- a ray:
+-- Ends of segments or intervals are calculated by intersecting the
+-- ray and the surface of the primitive. This is done with 'trace',
+-- which substitutes the equation of ray @p(t) = p_o + v * t@ into the
+-- equation which defines the surface and solves it for @t@.
+--
+-- Hit points may in lie in infinity. For example, because a ray
+-- intersects a plane only once, a half-space primitive defined by
+-- this plane results in a half-interval trace of a ray:
 --
 -- >                                          /
 -- >                                         /
 -- >                                        /
--- >              #------------------------o*****************>
+-- >              O========================+*****************>
 -- >              |                       /                  |
 -- >             ray                     /            goes to infinity
 -- >                                    /
@@ -125,21 +135,15 @@ type HitSegment = (Pair HitPoint HitPoint)
 -- >                                  /
 -- >                                 / - surface of half-space
 --
--- Ends of segments or intervals are calculated by intersecting the
--- ray and the surface of the primitive. This is done with the help of
--- 'trace', which substitutes the equation of ray @p(t) = p_o + v*t@
--- into the equation which defines the surface and solves it for @t@.
---
 -- If the solid is a composition, traces from primitives are then
 -- combined according to operations used to define the solid (union,
 -- intersection or complement).
 --
--- Although only convex primitives are used in current implementation,
--- compositions may result in concave solids, which is why trace is
--- defined as a list of segments.
+-- Although only convex primitives are used in the current
+-- implementation, operations on solids may result in concave solids,
+-- which is why trace is defined as a list of segments.
 --
--- In this example, solid is an intersection of a sphere and a sphere
--- complement:
+-- In this example, solid is a sphere with a cutout:
 --
 -- >                        -------------
 -- >                   ----/             \----
@@ -150,10 +154,10 @@ type HitSegment = (Pair HitPoint HitPoint)
 -- >           /        -/                 \-        \
 -- >          /        /                     \        \
 -- >         /        /                       \        \
--- >         |  hs1  /                         \  hs2  |
--- >    -----+*******+-------------------------+*******+--------->
--- >    |    |       \                         /       |
--- >   ray   \        \                       /        /
+-- >         |  hs1  |                         |  hs2  |
+-- >    - - -+*******+- - - - - - O============+*******+=========>
+-- >         |       |            |            |       |
+-- >         \        \          ray          /        /
 -- >          \        \                     /        /
 -- >           \        -\                 /-        /
 -- >            \         --\           /--         /
@@ -164,6 +168,10 @@ type HitSegment = (Pair HitPoint HitPoint)
 -- >                        -------------
 --
 -- Here, the full trace contains two segments: @hs1@ and @hs2@.
+-- Moreover, 'trace' treats ray as a line with a designated point on
+-- it, in reference to which distances to hit points are calculated.
+-- This means that @hs1@ will have negative distances from the initial
+-- point as that segment precedes it.
 type Trace = [HitSegment]
 
 
