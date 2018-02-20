@@ -12,21 +12,16 @@ whether a point belongs to the solid (for Monte Carlo volume
 calculation).
 
 ```haskell
--- "Data.CSG" uses 'CVec3' to represent vectors and points:
-
+-- "Data.CSG" uses 'Vec3' to represent vectors and points:
 >>> let p1 = fromXYZ (5, -6.5, -5)
 >>> toXYZ (origin :: Point)
 (0.0,0.0,0.0)
 
 -- Define some solids:
-
 >>> let s = sphere origin 5.0
 >>> let b = cuboid (fromXYZ (-1, -1, -1)) (fromXYZ (1, 1, 1))
 
--- See "Data.CSG.Parser" for a non-programmatic way to define solids.
-
 -- Test if a point is inside the solid:
-
 >>> origin `inside` (s `intersect` b)
 True
 
@@ -35,7 +30,6 @@ False
 
 -- Find the distance to the next intersection of a ray with a solid, along with the
 -- surface normal:
-
 >>> let axis = fromXYZ (1, 2, 10)
 >>> let solid = cylinder origin axis 2.0 `intersect` sphere origin 3.5
 >>> let ray = Ray (p1, origin <-> p1)
@@ -45,6 +39,13 @@ Just (HitPoint 0.7422558525331708 (Just (CVec3 0.7155468474912454 (-0.6952955216
 
 Please consult the [Hackage page for csg][hackage-doc]
 for full documentation.
+
+By default `csg` is built using `CVec3` from [simple-vec3][] to
+represent vectors and points, which according to benchmarks shows
+better performance with Unboxed and Storable vectors. Build `csg` with
+`triples` flag to use `(Double, Double, Double)` instead which may be
+a more convenient programmatic interface that needs no
+`fromXYZ`/`toXYZ`.
 
 See [alternatives](#alternatives) too.
 
@@ -130,3 +131,4 @@ There're other Haskell libraries for CSG:
 [implicit]: https://hackage.haskell.org/package/implicit
 [mecha]: https://hackage.haskell.org/package/mecha
 [parser-doc]: http://hackage.haskell.org/package/csg/docs/Data-CSG-Parser.html
+[simple-vec3]: https://hackage.haskell.org/package/simple-vec3

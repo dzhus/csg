@@ -7,7 +7,7 @@ Single-threaded benchmark for CSG operations.
 -}
 
 import Criterion.Main
-import Data.Vector.Storable as V hiding ((++))
+import Data.Vector.Unboxed as V hiding ((++))
 import qualified Data.Strict.Maybe as S
 
 import Data.CSG hiding (distance)

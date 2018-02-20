@@ -1,4 +1,5 @@
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE CPP #-}
 
 {-|
 
@@ -61,7 +62,7 @@ import qualified Data.Vec3 as V3
 
 -- $examples
 --
--- "Data.CSG" uses 'CVec3' to represent vectors and points:
+-- "Data.CSG" uses 'Vec3' to represent vectors and points:
 --
 -- >>> let p1 = fromXYZ (5, -6.5, -5)
 -- >>> toXYZ (origin :: Point)
@@ -92,8 +93,17 @@ import qualified Data.Vec3 as V3
 -- Just (HitPoint 0.7422558525331708 (Just (CVec3 0.7155468474912454 (-0.6952955216188516) 6.750441957464598e-2)))
 
 
-type Point  = Vec3
+#ifdef WITH_TRIPLES
+type Vec3   = TVec3
+#else
+-- | We use 'CVec3' as a simple replacement for @(Double, Double,
+-- Double)@. 'CVec3' implements a contiguous storage scheme for
+-- Unboxed and Storable vectors which shows better performance.
+-- Compile this package with @triples@ flag and run benchmarks to see
+-- the difference.
 type Vec3   = CVec3
+#endif
+type Point  = Vec3
 type Matrix = V3.Matrix Vec3
 
 

@@ -18,7 +18,7 @@ ghc-options:
 
 dependencies:
   - base < 5
-  - simple-vec3 >= 0.3.1
+  - simple-vec3 >= 0.4
 
 library:
   source-dirs: src
@@ -29,6 +29,10 @@ library:
     - strict
     - QuickCheck
     - transformers
+
+  when:
+    - condition: flag(triples)
+      cpp-options: -DWITH_TRIPLES
 
 benchmarks:
   csg-benchmark:
@@ -74,3 +78,10 @@ executables:
       - QuickCheck
       - strict
       - turtle
+
+flags:
+  triples:
+    description: Use triples of Doubles to represent vectors
+                 (slower with vectors)
+    manual: true
+    default: false
