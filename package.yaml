@@ -84,6 +84,6 @@ executables:
 flags:
   triples:
     description: Use triples of Doubles to represent vectors
-                 (slower with vectors)
+                 (slower with vector library arrays)
     manual: true
     default: false
