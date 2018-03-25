@@ -1,4 +1,5 @@
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -15,7 +16,10 @@ import qualified Data.Strict.Maybe as S
 
 import GHC.Float
 import Data.String
+#if MIN_VERSION_base(4,11,0)
+#else
 import Data.Monoid
+#endif
 import Data.Version
 
 import Graphics.Gloss.Data.Color
