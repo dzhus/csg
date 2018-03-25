@@ -113,14 +113,26 @@ In the GUI window the following controls are supported:
 
 csg library performs no surface interpolation when doing ray casting.
 Instead, we only solve ray-surface intersection equation numerically.
+The library was written with Repa/vector compatibility and performance
+in mind.
 
 There're other Haskell libraries for CSG:
 
+- [GlomeTrace][]:
+
+    - Has more ray tracing-specific features, such as light sources,
+      different textures and materials.
+
+    - Unlike `csg`, has no tests or benchmarks.
+
+    - In `csg` solids use the same type as opposed to different types
+      with an existential box in `GlomeTrace`.
+
 - [implicit][]:
 
-    - Offers a much richer operation set
+    - Offers a much richer operation set.
 
-    - Uses function representation for CSG solids
+    - Uses function representation for CSG solids.
 
     - If `implicit` had ray-casting support in early 2012 then I
       probably wouldn't write `csg`.
@@ -128,9 +140,9 @@ There're other Haskell libraries for CSG:
 - [mecha][]:
 
     - Only provides types and functions to define solids and export
-      definitions to external formats
+      definitions to external formats.
 
-    - No support for ray casting
+    - No support for ray casting.
 
 [csg-wiki]: https://en.wikipedia.org/wiki/Constructive_solid_geometry
 [hackage-doc]: http://hackage.haskell.org/package/csg/docs/Data-CSG.html
@@ -138,3 +150,4 @@ There're other Haskell libraries for CSG:
 [mecha]: https://hackage.haskell.org/package/mecha
 [parser-doc]: http://hackage.haskell.org/package/csg/docs/Data-CSG-Parser.html
 [simple-vec3]: https://hackage.haskell.org/package/simple-vec3
+[glometrace]: https://hackage.haskell.org/package/GlomeTrace
