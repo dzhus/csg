@@ -1,11 +1,8 @@
-resolver: nightly-2018-03-30
+resolver: nightly-2018-05-09
 
 extra-deps:
-- doctest-discover-0.1.0.9
 - gloss-1.12.0.0
 - gloss-raster-1.12.0.0
 - gloss-rendering-1.12.0.0
-- repa-3.4.1.3
-- simple-vec3-0.4.0.1
 
 pvp-bounds: upper
