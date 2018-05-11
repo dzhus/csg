@@ -1,8 +1,4 @@
-resolver: nightly-2018-05-09
-
-extra-deps:
-- gloss-1.12.0.0
-- gloss-raster-1.12.0.0
-- gloss-rendering-1.12.0.0
-
+resolver: nightly-2018-05-12
 pvp-bounds: upper
+extra-deps:
+- tasty-1.1
