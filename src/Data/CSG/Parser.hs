@@ -242,8 +242,7 @@ binary :: ByteString -> (CSG.Solid -> CSG.Solid -> CSG.Solid) -> CSGParser CSG.S
 binary op compose = do
   b1 <- uncomposedSolid
   lift (skipSpace *> string op *> skipSpace)
-  b2 <- solid
-  return $ compose b1 b2
+  compose b1 <$> solid
 
 
 -- | Read a stamement which adds a new solid entry to the lookup
