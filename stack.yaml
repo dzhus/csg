@@ -1,6 +1,4 @@
-resolver: nightly-2018-06-29
+resolver: nightly-2018-07-14
 pvp-bounds: upper
 extra-deps:
-- doctest-0.16.0
-- doctest-driver-gen-0.2.0.3
-- tasty-1.1
+- criterion-1.5.0.0
