@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.0.5] - 2018-08-20
+
+### Changed
+
+- Dependencies bump
+
 ## [0.1.0.4] - 2018-07-16
 
 ### Changed
@@ -28,6 +34,7 @@
 
 ## [0.1] - 2018-03-20
 
+[0.1.0.5]: https://github.com/dzhus/csg/compare/0.1.0.4...0.1.0.5
 [0.1.0.4]: https://github.com/dzhus/csg/compare/0.1.0.3...0.1.0.4
 [0.1.0.3]: https://github.com/dzhus/csg/compare/0.1.0.2...0.1.0.3
 [0.1.0.2]: https://github.com/dzhus/csg/compare/0.1.0.1...0.1.0.2
