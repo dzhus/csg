@@ -1,5 +1,5 @@
 name:       csg
-version:    "0.1.0.5"
+version:    "0.1.0.6"
 synopsis:   Analytical CSG (Constructive Solid Geometry) library
 github:     dzhus/csg
 license:    BSD3

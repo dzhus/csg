@@ -1,6 +1,4 @@
-resolver: nightly-2018-08-20
+resolver: nightly-2018-12-12
 pvp-bounds: upper
 extra-deps:
-- gloss-1.13.0.1
-- gloss-raster-1.13.0.1
-- gloss-rendering-1.13.0.1
+- QuickCheck-2.12.6.1
