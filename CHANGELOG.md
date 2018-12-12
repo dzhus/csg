@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.0.6] - 2018-12-12
+
+### Changed
+
+- GHC 8.6.x support
+
 ## [0.1.0.5] - 2018-08-20
 
 ### Changed
@@ -34,6 +40,7 @@
 
 ## [0.1] - 2018-03-20
 
+[0.1.0.6]: https://github.com/dzhus/csg/compare/0.1.0.5...0.1.0.6
 [0.1.0.5]: https://github.com/dzhus/csg/compare/0.1.0.4...0.1.0.5
 [0.1.0.4]: https://github.com/dzhus/csg/compare/0.1.0.3...0.1.0.4
 [0.1.0.3]: https://github.com/dzhus/csg/compare/0.1.0.2...0.1.0.3
