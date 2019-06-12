@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.0.7] - 2019-06-12
+
+### Changed
+
+- Test suite dependencies bump
+
 ## [0.1.0.6] - 2019-01-18
 
 ### Changed
@@ -40,6 +46,7 @@
 
 ## [0.1] - 2018-03-20
 
+[0.1.0.6]: https://github.com/dzhus/csg/compare/0.1.0.6...0.1.0.7
 [0.1.0.6]: https://github.com/dzhus/csg/compare/0.1.0.5...0.1.0.6
 [0.1.0.5]: https://github.com/dzhus/csg/compare/0.1.0.4...0.1.0.5
 [0.1.0.4]: https://github.com/dzhus/csg/compare/0.1.0.3...0.1.0.4

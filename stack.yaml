@@ -1,2 +1,5 @@
-resolver: nightly-2019-01-18
+resolver: nightly-2020-02-17
 pvp-bounds: upper
+extra-deps:
+- gloss-raster-1.13.1.1@sha256:a87a2cfbce988f439b635fe2587a249a45fdeaa9e804643db29a5fed4c2e0408,1455
+- repa-3.4.1.4@sha256:5c836bc314ea04ac284d21117b361eb95829d793e8f82508535aa0ca04911d9e,3315
