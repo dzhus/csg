@@ -97,7 +97,7 @@ import qualified Data.Vec3 as V3
 -- >>> import Data.CSG.Parser
 -- >>> Right solid2 <- parseGeometryFile "examples/reentry.geo"
 -- >>> ray `cast` solid2
--- Just (HitPoint 10.877824491509912 (Just (CVec3 (-0.5690708596937849) 0.7397921176019203 0.3589790793088691)))
+-- Just (HitPoint 10.877824491509912 (Just (CVec3 (-0.6031471437737121) 0.7840912869058257 0.1463365188733793)))
 
 #ifdef WITH_TRIPLES
 type Vec3   = TVec3

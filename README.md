@@ -40,7 +40,7 @@ Just (HitPoint 0.7422558525331708 (Just (CVec3 0.7155468474912454 (-0.6952955216
 >>> import Data.CSG.Parser
 >>> Right solid2 <- parseGeometryFile "examples/reentry.geo"
 >>> ray `cast` solid2
-Just (HitPoint 10.877824491509912 (Just (CVec3 (-0.5690708596937849) 0.7397921176019203 0.3589790793088691)))
+Just (HitPoint 10.877824491509912 (Just (CVec3 (-0.6031471437737121) 0.7840912869058257 0.1463365188733793)))
 ```
 
 Please consult the [Hackage page for csg][hackage-doc]
