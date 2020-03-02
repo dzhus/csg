@@ -575,9 +575,7 @@ complementTrace ((sp@(HitPoint ts _) :!: ep):xs) =
           HitPoint t1 (invert <$> n1) :!: HitPoint t2 (invert <$> n2)
       {-# INLINE flipNormals #-}
       -- Start from infinity if first hitpoint is finite
-      start = if isInfinite ts
-              then []
-              else [flipNormals $ hitN :!: sp]
+      start = [flipNormals $ hitN :!: sp | not (isInfinite ts)]
       complementTrace' :: HitPoint -> Trace -> Trace
       complementTrace' c ((a :!: b):tr) =
           -- Bridge between the last point of the previous segment and
