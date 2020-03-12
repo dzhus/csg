@@ -1,6 +1,6 @@
 # CSG: constructive solid geometry library
 
-[![Travis CI build status](https://travis-ci.org/dzhus/csg.svg)](https://travis-ci.org/dzhus/csg)
+[![Build & test](https://github.com/dzhus/csg/workflows/Build%20&%20test/badge.svg)](https://github.com/dzhus/csg/actions)
 [![Hackage](https://img.shields.io/hackage/v/csg.svg?colorB=5e5184&style=flat)](https://hackage.haskell.org/package/csg)
 [![Hackage deps](https://img.shields.io/hackage-deps/v/csg.svg)](http://packdeps.haskellers.com/feed?needle=csg)
 
