@@ -46,7 +46,7 @@ data World = World { dist :: Double
                    -- ^ Yaw of camera as if it was in origin.
                    , target :: Point
                    -- ^ Where camera looks at.
-                   , holdPoint :: Maybe Position
+                   , dragStart :: Maybe Position
                    -- ^ Position where mouse button was held down.
                    , mode :: InteractionMode
                    }
@@ -119,11 +119,11 @@ handleEvent (Char 'r') Down _ w =
    , dist = initialDistance
    }
 handleEvent (MouseButton LeftButton) Down p w =
-  w{holdPoint = Just p, mode = Rotate}
+  w{dragStart = Just p, mode = Rotate}
 handleEvent (MouseButton RightButton) Down p w =
-  w{holdPoint = Just w, mode = Pan}
+  w{dragStart = Just w, mode = Pan}
 handleEvent (MouseButton _) Up _ w =
-  w{holdPoint = Nothing}
+  w{dragStart = Nothing}
 handleEvent (MouseButton WheelDown) _ _ w =
   w{dist = dist w + zoomFactor}
 handleEvent (G.MouseButton G.WheelUp) _ _ w =
@@ -134,7 +134,7 @@ handleEvent _ _ _ w = w
 -- | Handle mouse movement in drag mode to change pitch & yaw.
 handleMovement :: Position -> World -> World
 handleMovement (Position x y) w =
-  case holdPoint w of
+  case dragStart w of
     Nothing -> w
     Just (u, v) ->
         let
@@ -142,7 +142,7 @@ handleMovement (Position x y) w =
             ydelta = float2Double (y - v) * dragFactor
         in
           case mode w of
-            Rotate -> w{ holdPoint = Just p
+            Rotate -> w{ dragStart = Just p
                        , yaw = yaw w - xdelta
                        , pitch = pitch w + ydelta
                        }
@@ -150,7 +150,7 @@ handleMovement (Position x y) w =
                 let
                     !(_, sX, sY) = buildCartesian (yaw w) (pitch w)
                 in
-                  w{ holdPoint = Just p
+                  w{ dragStart = Just p
                    , target = target w <+> (sX .^ xdelta) <-> (sY .^ ydelta)
                    }
             _ -> w
