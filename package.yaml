@@ -74,8 +74,7 @@ executables:
       - '"-with-rtsopts=-N"'
     dependencies:
       - csg
-      - gloss
-      - gloss-raster
+      - GLUT
       - system-filepath
       - QuickCheck
       - strict

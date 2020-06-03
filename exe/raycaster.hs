@@ -22,11 +22,7 @@ import Data.Monoid
 #endif
 import Data.Version
 
-import Graphics.Gloss.Data.Color
-import Graphics.Gloss.Data.Display
-import qualified Graphics.Gloss.Data.Point as G
-import qualified Graphics.Gloss.Interface.Pure.Game as G
-import Graphics.Gloss.Raster.Field hiding (Point)
+import Graphics.UI.GLUT as G hiding (None)
 
 import Test.QuickCheck hiding ((><))
 import Turtle.Options
@@ -50,8 +46,8 @@ data World = World { dist :: Double
                    -- ^ Yaw of camera as if it was in origin.
                    , target :: Point
                    -- ^ Where camera looks at.
-                   , holdPoint :: Maybe (Float, Float)
-                   -- ^ Point where mouse button was held down.
+                   , holdPoint :: Maybe Position
+                   -- ^ Position where mouse button was held down.
                    , mode :: InteractionMode
                    }
 
@@ -114,48 +110,50 @@ zoomFactor :: Double
 zoomFactor = 0.1
 
 
--- | Handle mouse drag to change pitch & yaw and mouse wheel to zoom.
-handleEvents :: G.Event -> World -> World
-handleEvents e w =
-    case e of
-      G.EventKey (G.MouseButton G.LeftButton) G.Down _ c ->
-          w{holdPoint = Just c, mode = Rotate}
-      G.EventKey (G.MouseButton G.RightButton) G.Down _ c ->
-          w{holdPoint = Just c, mode = Pan}
-      G.EventKey (G.MouseButton _) G.Up _ _ ->
-          w{holdPoint = Nothing}
-      G.EventKey (G.MouseButton G.WheelDown) _ _ _ ->
-          w{dist = dist w + zoomFactor}
-      G.EventKey (G.MouseButton G.WheelUp) _ _ _ ->
-          w{dist = dist w - zoomFactor}
-      G.EventKey (G.Char 'r') G.Down _ _ ->
-          w{ target = origin
-           , yaw = 0
-           , pitch = 0
-           , dist = initialDistance
-           }
-      G.EventMotion p@(x, y) ->
-          case holdPoint w of
-            Nothing -> w
-            Just (u, v) ->
+-- | Handle mouse clicks to enter drag mode and mouse wheel to zoom.
+handleEvent :: Key -> KeyState -> Position -> World -> World
+handleEvent (Char 'r') Down _ w =
+  w{ target = origin
+   , yaw = 0
+   , pitch = 0
+   , dist = initialDistance
+   }
+handleEvent (MouseButton LeftButton) Down p w =
+  w{holdPoint = Just p, mode = Rotate}
+handleEvent (MouseButton RightButton) Down p w =
+  w{holdPoint = Just w, mode = Pan}
+handleEvent (MouseButton _) Up _ w =
+  w{holdPoint = Nothing}
+handleEvent (MouseButton WheelDown) _ _ w =
+  w{dist = dist w + zoomFactor}
+handleEvent (G.MouseButton G.WheelUp) _ _ w =
+  w{dist = dist w - zoomFactor}
+handleEvent _ _ _ w = w
+
+
+-- | Handle mouse movement in drag mode to change pitch & yaw.
+handleMovement :: Position -> World -> World
+handleMovement (Position x y) w =
+  case holdPoint w of
+    Nothing -> w
+    Just (u, v) ->
+        let
+            xdelta = float2Double (x - u) * dragFactor
+            ydelta = float2Double (y - v) * dragFactor
+        in
+          case mode w of
+            Rotate -> w{ holdPoint = Just p
+                       , yaw = yaw w - xdelta
+                       , pitch = pitch w + ydelta
+                       }
+            Pan ->
                 let
-                    xdelta = float2Double (x - u) * dragFactor
-                    ydelta = float2Double (y - v) * dragFactor
+                    !(_, sX, sY) = buildCartesian (yaw w) (pitch w)
                 in
-                  case mode w of
-                    Rotate -> w{ holdPoint = Just p
-                               , yaw = yaw w - xdelta
-                               , pitch = pitch w + ydelta
-                               }
-                    Pan ->
-                        let
-                            !(_, sX, sY) = buildCartesian (yaw w) (pitch w)
-                        in
-                          w{ holdPoint = Just p
-                           , target = target w <+> (sX .^ xdelta) <-> (sY .^ ydelta)
-                           }
-                    _ -> w
-      _ -> w
+                  w{ holdPoint = Just p
+                   , target = target w <+> (sX .^ xdelta) <-> (sY .^ ydelta)
+                   }
+            _ -> w
 
 
 -- | Build cartesian axes from yaw and pitch with 0 roll. Angles are
