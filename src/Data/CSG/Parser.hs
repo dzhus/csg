@@ -89,7 +89,7 @@ type TableT a k v = StateT (M.Map k v) a
 
 -- | Add an entry to the lookup table.
 addEntry :: (Ord k, Monad a) => k -> v -> TableT a k v ()
-addEntry key value = fmap (M.insert key value) get >>= put
+addEntry key value = get >>= put . M.insert key value
 
 
 -- | Lookup entry in the table.
