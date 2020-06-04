@@ -1,5 +1,2 @@
-resolver: nightly-2020-03-01
+resolver: nightly-2021-08-15
 pvp-bounds: upper
-extra-deps:
-- gloss-raster-1.13.1.1
-- repa-3.4.1.4
