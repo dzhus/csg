@@ -75,9 +75,10 @@ executables:
     dependencies:
       - csg
       - GLUT
-      - system-filepath
+      - massiv
       - QuickCheck
       - strict
+      - system-filepath
       - turtle
 
 flags:

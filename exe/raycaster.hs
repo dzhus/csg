@@ -22,6 +22,9 @@ import Data.Monoid
 #endif
 import Data.Version
 
+import Data.Word
+
+import Data.Massiv.Array as A hiding ((.^), (.*), generate)
 import Graphics.UI.GLUT as G hiding (None)
 
 import Test.QuickCheck hiding ((><))
@@ -121,7 +124,7 @@ handleEvent (Char 'r') Down _ w =
 handleEvent (MouseButton LeftButton) Down p w =
   w{dragStart = Just p, mode = Rotate}
 handleEvent (MouseButton RightButton) Down p w =
-  w{dragStart = Just w, mode = Pan}
+  w{dragStart = Just p, mode = Pan}
 handleEvent (MouseButton _) Up _ w =
   w{dragStart = Nothing}
 handleEvent (MouseButton WheelDown) _ _ w =
@@ -133,13 +136,13 @@ handleEvent _ _ _ w = w
 
 -- | Handle mouse movement in drag mode to change pitch & yaw.
 handleMovement :: Position -> World -> World
-handleMovement (Position x y) w =
+handleMovement p@(Position x y) w =
   case dragStart w of
     Nothing -> w
-    Just (u, v) ->
+    Just (Position u v) ->
         let
-            xdelta = float2Double (x - u) * dragFactor
-            ydelta = float2Double (y - v) * dragFactor
+            xdelta = fromIntegral (x - u) * dragFactor
+            ydelta = fromIntegral (y - v) * dragFactor
         in
           case mode w of
             Rotate -> w{ dragStart = Just p
@@ -169,8 +172,10 @@ buildCartesian yaw pitch = (u, v, w)
 programName :: String
 programName = "csg-raycaster " ++ showVersion version
 
+sizeFromSz2 :: Sz2 -> G.Size
+sizeFromSz2 (Sz2 m n) = Size (fromIntegral n) (fromIntegral m)
 
-casterField :: Int
+startCasting :: Int
             -- ^ Window width.
             -> Int
             -- ^ Window height.
@@ -178,18 +183,18 @@ casterField :: Int
             -- ^ Pixels per point.
             -> Solid
             -- ^ Solid to show.
-            -> Color
-            -- ^ Bright color.
-            -> Color
-            -- ^ Dark color.
+            -- -> Color
+            -- -- ^ Bright color.
+            -- -> Color
+            -- -- ^ Dark color.
             -> IO ()
-casterField width height pixels solid bright' dark' =
+startCasting width height pixels solid -- bright' dark'
+  =
     let
-        display = InWindow programName (width, height) (0, 0)
-        makePixel :: World -> G.Point -> Color
+        makePixel :: World -> Ix2 -> Float
         !wS = fromIntegral (width `div` 2)
         !hS = fromIntegral (height `div` 2)
-        makePixel !w (x, y) =
+        makePixel !w (x :. y) =
             let
                 !d = dist w
                 !wScale = -(wS * d / scaleFactor)
@@ -198,20 +203,34 @@ casterField width height pixels solid bright' dark' =
                 !p = n .^ (-d) <+> target w
                 ray :: Ray
                 !ray = Ray (p
-                            <+> (sX .^ (float2Double x * wScale))
-                            <+> (sY .^ (float2Double y * hScale)), n)
+                            <+> (sX .^ (fromIntegral x * wScale))
+                            <+> (sY .^ (fromIntegral y * hScale)), n)
             in
               case ray `cast` solid of
                 S.Just (HitPoint _ (S.Just hn)) ->
-                    mixColors factor (1 - factor) bright' dark'
+                    255 * factor
                     where
                       factor = abs $ double2Float $ invert n .* hn
-                _ -> white
+                _ -> 0
+                -- S.Just (HitPoint _ (S.Just hn)) ->
+                --     mixColors factor (1 - factor) bright' dark'
+                --     where
+                --       factor = abs $ double2Float $ invert n .* hn
+                -- _ -> white
         {-# INLINE makePixel #-}
-    in
-      playField display (pixels, pixels) 5 start makePixel
-                    handleEvents
-                    (flip const)
+        makePixels :: Array S Ix2 Float
+        makePixels = A.makeArray Par wSz (makePixel start)
+        wSz = Sz2 width height
+    in do
+      G.windowSize $= sizeFromSz2 wSz
+      mArr <- new wSz
+      computeInto (mArr :: MArray RealWorld S Ix2 Float) $ makePixels
+      displayCallback $= clear [ColorBuffer]
+      A.withPtr mArr $ \ptr -> drawPixels (sizeFromSz2 (msize mArr)) (PixelData Luminance Float ptr)
+      mainLoop
+      -- playField display (pixels, pixels) 5 start makePixel
+      --               handleEvents
+      --               (flip const)
 
 
 -- | Read solid def and program arguments, run the actual caster on
@@ -226,7 +245,8 @@ main = do
     case solid of
         Right b -> do
           putStrLn $ "Rendering " <> show b
-          casterField width height pixels b
-            (uncurry4 makeColor brightRGBA)
-            (uncurry4 makeColor darkRGBA)
+          _w <- createWindow programName
+          startCasting width height pixels b
+            -- (uncurry4 makeColor brightRGBA)
+            -- (uncurry4 makeColor darkRGBA)
         Left e -> error $ "Problem when reading solid definition: " ++ e
