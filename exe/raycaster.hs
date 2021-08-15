@@ -191,7 +191,7 @@ startCasting :: Int
 startCasting width height pixels solid -- bright' dark'
   =
     let
-        makePixel :: World -> Ix2 -> Float
+        makePixel :: World -> Ix2 -> Word8
         !wS = fromIntegral (width `div` 2)
         !hS = fromIntegral (height `div` 2)
         makePixel !w (x :. y) =
@@ -208,9 +208,9 @@ startCasting width height pixels solid -- bright' dark'
             in
               case ray `cast` solid of
                 S.Just (HitPoint _ (S.Just hn)) ->
-                    255 * factor
+                  round $ 255 * factor
                     where
-                      factor = abs $ double2Float $ invert n .* hn
+                      factor = abs $ invert n .* hn
                 _ -> 0
                 -- S.Just (HitPoint _ (S.Just hn)) ->
                 --     mixColors factor (1 - factor) bright' dark'
@@ -218,15 +218,16 @@ startCasting width height pixels solid -- bright' dark'
                 --       factor = abs $ double2Float $ invert n .* hn
                 -- _ -> white
         {-# INLINE makePixel #-}
-        makePixels :: Array S Ix2 Float
+        makePixels :: Array S Ix2 Word8
         makePixels = A.makeArray Par wSz (makePixel start)
         wSz = Sz2 width height
     in do
       G.windowSize $= sizeFromSz2 wSz
       mArr <- newMArray' wSz
-      computeInto (mArr :: MArray RealWorld S Ix2 Float) $ makePixels
+      computeInto (mArr :: MArray RealWorld S Ix2 Word8) $ makePixels
       displayCallback $= clear [ColorBuffer]
-      A.withPtr mArr $ \ptr -> drawPixels (sizeFromSz2 (sizeOfMArray mArr)) (PixelData Luminance Float ptr)
+      A.withPtr mArr $ \ptr -> drawPixels (sizeFromSz2 (sizeOfMArray mArr)) (PixelData Luminance UnsignedByte ptr)
+      flush
       mainLoop
       -- playField display (pixels, pixels) 5 start makePixel
       --               handleEvents
