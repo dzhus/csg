@@ -196,8 +196,8 @@ startCasting width height pixels solid -- bright' dark'
   =
     let
         makePixel :: World -> Ix2 -> Pixel (SRGB 'NonLinear) Word8
-        !wS = fromIntegral (width `div` 2)
-        !hS = fromIntegral (height `div` 2)
+        !midX = fromIntegral (width `div` 2)
+        !midY = fromIntegral (height `div` 2)
         makePixel !w (x :. y) =
             let
                 !d = dist w
@@ -207,11 +207,16 @@ startCasting width height pixels solid -- bright' dark'
                 !p = n .^ (-d) <+> target w
                 ray :: Ray
                 !ray = Ray (p
-                            <+> (sX .^ (fromIntegral x * wScale))
-                            <+> (sY .^ (fromIntegral y * hScale)), n)
+                            <+> (sX .^ (fromIntegral (x - midX)))
+                            <+> (sY .^ (fromIntegral (y - midY))), n)
             in
               case ray `cast` solid of
-                -- S.Just (HitPoint _ (S.Just hn)) ->
+                S.Just (HitPoint _ (S.Just hn)) ->
+                  PixelRGB v v v
+                  where
+                    -- TODO blend bright & dark
+                    v = round $ 255 * factor
+                    factor = abs $ invert n .* hn
                 _ ->
                   PixelRGB v v v
                     where
