@@ -18,7 +18,7 @@ jobs:
           enable-stack: true
           stack-version: 'latest'
       - name: Install system deps
-        run: 'sudo apt-get -y freeglut3-dev'
+        run: 'sudo apt-get -y install freeglut3-dev'
 
       - name: Clone project
         uses: actions/checkout@v2
