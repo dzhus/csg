@@ -125,6 +125,7 @@ handleEvent w (Char 'r') Down _ =
    , pitch = 0
    , dist = initialDistance
    }
+
 handleMouseEvent w LeftButton Down p =
   w{dragStart = Just p, mode = Rotate}
 handleMouseEvent w RightButton Down p =
@@ -238,8 +239,13 @@ main = do
           mouseCallback $= Just (\k ks pos -> do
                                     w <- readTVarIO worldCell
                                     let newWorld = handleMouseEvent w k ks pos
-                                    print (newWorld, pos)
+                                    drawWorld width height newWorld
                                     atomically $ writeTVar worldCell newWorld)
+          motionCallback $= Just (\pos -> do
+                                     w <- readTVarIO worldCell
+                                     let newWorld = handleMovement pos w
+                                     drawWorld width height newWorld
+                                     atomically $ writeTVar worldCell newWorld)
           mainLoop
             -- (uncurry4 makeColor brightRGBA)
             -- (uncurry4 makeColor darkRGBA)
