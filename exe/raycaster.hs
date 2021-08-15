@@ -218,17 +218,18 @@ startCasting width height pixels solid -- bright' dark'
                 --       factor = abs $ double2Float $ invert n .* hn
                 -- _ -> white
         {-# INLINE makePixel #-}
-        makePixels :: Array S Ix2 Word8
+        makePixels :: Array D Ix2 Word8
         makePixels = A.makeArray Par wSz (makePixel start)
         wSz = Sz2 width height
     in do
+      rowAlignment Unpack $= 1
       G.windowSize $= sizeFromSz2 wSz
       mArr <- newMArray' wSz
-      computeInto (mArr :: MArray RealWorld S Ix2 Word8) $ makePixels
-      displayCallback $= clear [ColorBuffer]
-      A.withPtr mArr $ \ptr -> drawPixels (sizeFromSz2 (sizeOfMArray mArr)) (PixelData Luminance UnsignedByte ptr)
-      flush
-      mainLoop
+      computeInto (mArr :: MArray RealWorld S Ix2 Word8) makePixels
+      clear [ColorBuffer]
+      displayCallback $= (do
+                             A.withPtr mArr $ \ptr -> drawPixels (sizeFromSz2 (sizeOfMArray mArr)) (PixelData Luminance UnsignedByte ptr)
+                             flush)
       -- playField display (pixels, pixels) 5 start makePixel
       --               handleEvents
       --               (flip const)
@@ -249,6 +250,7 @@ main = do
           putStrLn $ "Rendering " <> show b
           _w <- createWindow programName
           startCasting width height pixels b
+          mainLoop
             -- (uncurry4 makeColor brightRGBA)
             -- (uncurry4 makeColor darkRGBA)
         Left e -> error $ "Problem when reading solid definition: " ++ e
