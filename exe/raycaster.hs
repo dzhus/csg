@@ -223,10 +223,10 @@ startCasting width height pixels solid -- bright' dark'
         wSz = Sz2 width height
     in do
       G.windowSize $= sizeFromSz2 wSz
-      mArr <- new wSz
+      mArr <- newMArray' wSz
       computeInto (mArr :: MArray RealWorld S Ix2 Float) $ makePixels
       displayCallback $= clear [ColorBuffer]
-      A.withPtr mArr $ \ptr -> drawPixels (sizeFromSz2 (msize mArr)) (PixelData Luminance Float ptr)
+      A.withPtr mArr $ \ptr -> drawPixels (sizeFromSz2 (sizeOfMArray mArr)) (PixelData Luminance Float ptr)
       mainLoop
       -- playField display (pixels, pixels) 5 start makePixel
       --               handleEvents
