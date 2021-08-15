@@ -100,7 +100,7 @@ initialDistance = 225
 
 -- | Initial world.
 start :: World
-start = World initialDistance 0 0 origin Nothing None
+start = World initialDistance (pi / 4) 0 origin Nothing None
 
 
 uncurry4 :: (a -> b -> c -> d -> e) -> (a, b, c, d) -> e
@@ -198,17 +198,17 @@ startCasting width height pixels solid -- bright' dark'
         makePixel :: World -> Ix2 -> Pixel (SRGB 'NonLinear) Word8
         !midX = fromIntegral (width `div` 2)
         !midY = fromIntegral (height `div` 2)
-        makePixel !w (x :. y) =
+        makePixel !w (y :. x) =
             let
                 !d = dist w
-                !wScale = -(midX * d / scaleFactor)
-                !hScale = (midY * d / scaleFactor)
+                !wScale = -(fromIntegral midX * d / scaleFactor)
+                !hScale = (fromIntegral midY * d / scaleFactor)
                 !(n, sX, sY) = buildCartesian (yaw w) (pitch w)
                 !p = n .^ (-d) <+> target w
                 ray :: Ray
                 !ray = Ray (p
-                            <+> (sX .^ (fromIntegral (x - midX)))
-                            <+> (sY .^ (fromIntegral (y - midY))), n)
+                            <+> (sX .^ (fromIntegral (x - midX) * 0.5))
+                            <+> (sY .^ (fromIntegral (y - midY) * 0.5)), n)
             in
               case ray `cast` solid of
                 S.Just (HitPoint _ (S.Just hn)) ->
