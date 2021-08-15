@@ -237,6 +237,7 @@ startCasting width height pixels solid -- bright' dark'
 -- success.
 main :: IO ()
 main = do
+    _ <- getArgsAndInitialize
     Options{..} <- options (fromString programName) optParser
     solid <-
       case geoFile of
