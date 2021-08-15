@@ -1,6 +1,5 @@
-resolver: nightly-2019-06-21
+resolver: nightly-2020-03-01
 pvp-bounds: upper
 extra-deps:
-- gloss-1.13.0.1
-- gloss-raster-1.13.0.1
-- gloss-rendering-1.13.0.1
+- gloss-raster-1.13.1.1
+- repa-3.4.1.4
