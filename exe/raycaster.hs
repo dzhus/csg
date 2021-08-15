@@ -201,8 +201,8 @@ startCasting width height pixels solid -- bright' dark'
         makePixel !w (x :. y) =
             let
                 !d = dist w
-                !wScale = -(wS * d / scaleFactor)
-                !hScale = (hS * d / scaleFactor)
+                !wScale = -(midX * d / scaleFactor)
+                !hScale = (midY * d / scaleFactor)
                 !(n, sX, sY) = buildCartesian (yaw w) (pitch w)
                 !p = n .^ (-d) <+> target w
                 ray :: Ray
