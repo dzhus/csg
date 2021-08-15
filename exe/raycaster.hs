@@ -27,9 +27,6 @@ import Data.Word
 
 import Data.Massiv.Array as A hiding ((.^), (.*), generate)
 import Graphics.UI.GLUT as G hiding (None)
-import Data.Massiv.Array.IO as MIO
-import Graphics.Pixel.ColorSpace as CS
-import Graphics.Color.Model as CM
 
 import Test.QuickCheck hiding ((><))
 import Turtle.Options
@@ -56,6 +53,7 @@ data World = World { dist :: Double
                    , dragStart :: Maybe Position
                    -- ^ Position where mouse button was held down.
                    , mode :: InteractionMode
+                   , solid :: Solid
                    }
 
 
@@ -75,8 +73,8 @@ data Options = Options
 optParser :: Parser Options
 optParser = Options
   <$> optional (argPath "geo-file" "Geometry definition file")
-  <*> (optInt "width" 'w' "Window width" <|> pure 500)
-  <*> (optInt "height" 'h' "Window height" <|> pure 500)
+  <*> (optInt "width" 'w' "Window width" <|> pure 1000)
+  <*> (optInt "height" 'h' "Window height" <|> pure 1000)
   <*> (optInt "pixels" 'p' "Pixels per ray (set to 1 for top quality)"
        <|> pure 1)
   <*> (optRead "bright-color" 'b'
@@ -99,8 +97,8 @@ initialDistance = 225
 
 
 -- | Initial world.
-start :: World
-start = World initialDistance (pi / 4) 0 origin Nothing None
+start :: Solid -> World
+start s = World initialDistance (- pi / 6) (pi / 5) origin Nothing None s
 
 
 uncurry4 :: (a -> b -> c -> d -> e) -> (a, b, c, d) -> e
@@ -179,73 +177,43 @@ programName = "csg-raycaster " ++ showVersion version
 sizeFromSz2 :: Sz2 -> G.Size
 sizeFromSz2 (Sz2 m n) = Size (fromIntegral n) (fromIntegral m)
 
-startCasting :: Int
-            -- ^ Window width.
-            -> Int
-            -- ^ Window height.
-            -> Int
-            -- ^ Pixels per point.
-            -> Solid
-            -- ^ Solid to show.
-            -- -> Color
-            -- -- ^ Bright color.
-            -- -> Color
-            -- -- ^ Dark color.
-            -> IO ()
-startCasting width height pixels solid -- bright' dark'
-  =
-    let
-        makePixel :: World -> Ix2 -> Pixel (SRGB 'NonLinear) Word8
-        !midX = fromIntegral (width `div` 2)
-        !midY = fromIntegral (height `div` 2)
-        makePixel !w (y :. x) =
+
+drawWorld :: Int -> Int -> World -> IO ()
+drawWorld width height world =
+  let
+    makePixel :: World -> Ix2 -> Word8
+    !midX = fromIntegral (width `div` 2)
+    !midY = fromIntegral (height `div` 2)
+    makePixel !w (y :. x) =
             let
                 !d = dist w
-                !wScale = -(fromIntegral midX * d / scaleFactor)
-                !hScale = (fromIntegral midY * d / scaleFactor)
                 !(n, sX, sY) = buildCartesian (yaw w) (pitch w)
                 !p = n .^ (-d) <+> target w
                 ray :: Ray
                 !ray = Ray (p
-                            <+> (sX .^ (fromIntegral (x - midX) * 0.5))
-                            <+> (sY .^ (fromIntegral (y - midY) * 0.5)), n)
+                            <+> (sX .^ (fromIntegral (x - midX) * 0.7))
+                            <+> (sY .^ (fromIntegral (y - midY) * 0.7)), n)
             in
-              case ray `cast` solid of
+              case ray `cast` solid world of
                 S.Just (HitPoint _ (S.Just hn)) ->
-                  PixelRGB v v v
+                  v
                   where
                     -- TODO blend bright & dark
                     v = round $ 255 * factor
                     factor = abs $ invert n .* hn
                 _ ->
-                  PixelRGB v v v
+                  v
                     where
                       v = fromIntegral $ x + y
-                      -- v = round $ 255 * factor
-                      -- factor = abs $ invert n .* hn
-                -- S.Just (HitPoint _ (S.Just hn)) ->
-                --     mixColors factor (1 - factor) bright' dark'
-                --     where
-                --       factor = abs $ double2Float $ invert n .* hn
-                -- _ -> white
-        {-# INLINE makePixel #-}
-        makePixels :: A.Matrix D (Pixel (SRGB 'NonLinear) Word8)
-        makePixels = A.makeArray Par wSz (makePixel start)
-        wSz = Sz2 width height
-    in do
-      rowAlignment Unpack $= 1
-      G.windowSize $= sizeFromSz2 wSz
-      mArr <- newMArray' wSz
-      computeInto mArr makePixels
-      img <- freezeS mArr
-      MIO.writeImage "test.png" (img :: Image S (SRGB 'NonLinear) Word8)
-      -- clear [ColorBuffer]
-      -- displayCallback $= (do
-      --                        A.withPtr mArr $ \ptr -> drawPixels (sizeFromSz2 (sizeOfMArray mArr)) (PixelData Luminance UnsignedByte ptr)
-      --                        flush)
-      -- playField display (pixels, pixels) 5 start makePixel
-      --               handleEvents
-      --               (flip const)
+    {-# INLINE makePixel #-}
+    makePixels :: A.Matrix D Word8
+    makePixels = A.makeArray Par wSz (makePixel world)
+    wSz = Sz2 width height
+  in do
+    mArr <- newMArray' wSz
+    computeInto mArr makePixels
+    A.withPtr mArr $ \ptr -> drawPixels (sizeFromSz2 (sizeOfMArray mArr)) (PixelData Luminance UnsignedByte ptr)
+    flush
 
 
 -- | Read solid def and program arguments, run the actual caster on
@@ -262,8 +230,10 @@ main = do
         Right b -> do
           putStrLn $ "Rendering " <> show b
           _w <- createWindow programName
-          startCasting width height pixels b
-          -- mainLoop
+          displayCallback $= clear [ColorBuffer] -- TODO Why?
+          rowAlignment Unpack $= 1 -- TODO What is this and why do we need this?
+          drawWorld width height (start b)
+          mainLoop
             -- (uncurry4 makeColor brightRGBA)
             -- (uncurry4 makeColor darkRGBA)
         Left e -> error $ "Problem when reading solid definition: " ++ e
