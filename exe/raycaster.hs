@@ -213,7 +213,7 @@ casterField width height pixels solid bright' dark' =
     in
       playField display (pixels, pixels) 5 start makePixel
                     handleEvents
-                    (flip const)
+                    (const id)
 
 
 -- | Read solid def and program arguments, run the actual caster on
