@@ -2,6 +2,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DataKinds #-}
 
 {-|
 
@@ -26,6 +27,9 @@ import Data.Word
 
 import Data.Massiv.Array as A hiding ((.^), (.*), generate)
 import Graphics.UI.GLUT as G hiding (None)
+import Data.Massiv.Array.IO as MIO
+import Graphics.Pixel.ColorSpace as CS
+import Graphics.Color.Model as CM
 
 import Test.QuickCheck hiding ((><))
 import Turtle.Options
@@ -191,7 +195,7 @@ startCasting :: Int
 startCasting width height pixels solid -- bright' dark'
   =
     let
-        makePixel :: World -> Ix2 -> Word8
+        makePixel :: World -> Ix2 -> Pixel (SRGB 'NonLinear) Word8
         !wS = fromIntegral (width `div` 2)
         !hS = fromIntegral (height `div` 2)
         makePixel !w (x :. y) =
@@ -207,29 +211,33 @@ startCasting width height pixels solid -- bright' dark'
                             <+> (sY .^ (fromIntegral y * hScale)), n)
             in
               case ray `cast` solid of
-                S.Just (HitPoint _ (S.Just hn)) ->
-                  round $ 255 * factor
+                -- S.Just (HitPoint _ (S.Just hn)) ->
+                _ ->
+                  PixelRGB v v v
                     where
-                      factor = abs $ invert n .* hn
-                _ -> 0
+                      v = fromIntegral $ x + y
+                      -- v = round $ 255 * factor
+                      -- factor = abs $ invert n .* hn
                 -- S.Just (HitPoint _ (S.Just hn)) ->
                 --     mixColors factor (1 - factor) bright' dark'
                 --     where
                 --       factor = abs $ double2Float $ invert n .* hn
                 -- _ -> white
         {-# INLINE makePixel #-}
-        makePixels :: Array D Ix2 Word8
+        makePixels :: A.Matrix D (Pixel (SRGB 'NonLinear) Word8)
         makePixels = A.makeArray Par wSz (makePixel start)
         wSz = Sz2 width height
     in do
       rowAlignment Unpack $= 1
       G.windowSize $= sizeFromSz2 wSz
       mArr <- newMArray' wSz
-      computeInto (mArr :: MArray RealWorld S Ix2 Word8) makePixels
-      clear [ColorBuffer]
-      displayCallback $= (do
-                             A.withPtr mArr $ \ptr -> drawPixels (sizeFromSz2 (sizeOfMArray mArr)) (PixelData Luminance UnsignedByte ptr)
-                             flush)
+      computeInto mArr makePixels
+      img <- freezeS mArr
+      MIO.writeImage "test.png" (img :: Image S (SRGB 'NonLinear) Word8)
+      -- clear [ColorBuffer]
+      -- displayCallback $= (do
+      --                        A.withPtr mArr $ \ptr -> drawPixels (sizeFromSz2 (sizeOfMArray mArr)) (PixelData Luminance UnsignedByte ptr)
+      --                        flush)
       -- playField display (pixels, pixels) 5 start makePixel
       --               handleEvents
       --               (flip const)
@@ -250,7 +258,7 @@ main = do
           putStrLn $ "Rendering " <> show b
           _w <- createWindow programName
           startCasting width height pixels b
-          mainLoop
+          -- mainLoop
             -- (uncurry4 makeColor brightRGBA)
             -- (uncurry4 makeColor darkRGBA)
         Left e -> error $ "Problem when reading solid definition: " ++ e

@@ -73,9 +73,11 @@ executables:
       - -rtsopts
       - '"-with-rtsopts=-N"'
     dependencies:
+      - Color
       - csg
       - GLUT
       - massiv
+      - massiv-io
       - QuickCheck
       - strict
       - system-filepath
