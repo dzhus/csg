@@ -82,6 +82,7 @@ executables:
       - strict
       - system-filepath
       - turtle
+      - unliftio
 
 flags:
   triples:

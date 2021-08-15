@@ -38,8 +38,9 @@ import Data.CSG.Parser
 
 import Paths_csg
 
-data InteractionMode = None | Rotate | Pan
+import UnliftIO.STM
 
+data InteractionMode = None | Rotate | Pan deriving Show
 
 -- | World state with observation point parameters and event helpers.
 -- Roll is always 0.
@@ -55,6 +56,7 @@ data World = World { dist :: Double
                    , mode :: InteractionMode
                    , solid :: Solid
                    }
+             deriving Show
 
 
 -- | Command line options for caster.
@@ -116,25 +118,24 @@ zoomFactor = 0.1
 
 
 -- | Handle mouse clicks to enter drag mode and mouse wheel to zoom.
-handleEvent :: Key -> KeyState -> Position -> World -> World
-handleEvent (Char 'r') Down _ w =
+handleEvent :: World -> Key -> KeyState -> Position -> World
+handleEvent w (Char 'r') Down _ =
   w{ target = origin
    , yaw = 0
    , pitch = 0
    , dist = initialDistance
    }
-handleEvent (MouseButton LeftButton) Down p w =
+handleMouseEvent w LeftButton Down p =
   w{dragStart = Just p, mode = Rotate}
-handleEvent (MouseButton RightButton) Down p w =
+handleMouseEvent w RightButton Down p =
   w{dragStart = Just p, mode = Pan}
-handleEvent (MouseButton _) Up _ w =
+handleMouseEvent w _ Up _ =
   w{dragStart = Nothing}
-handleEvent (MouseButton WheelDown) _ _ w =
+handleMouseEvent w WheelDown _ _ =
   w{dist = dist w + zoomFactor}
-handleEvent (G.MouseButton G.WheelUp) _ _ w =
+handleMouseEvent w WheelUp _ _ =
   w{dist = dist w - zoomFactor}
-handleEvent _ _ _ w = w
-
+handleMouseEvent w _ _ _ = w
 
 -- | Handle mouse movement in drag mode to change pitch & yaw.
 handleMovement :: Position -> World -> World
@@ -228,11 +229,17 @@ main = do
         Just fp -> parseGeometryFile (encodeString fp)
     case solid of
         Right b -> do
+          worldCell <- newTVarIO (start b)
           putStrLn $ "Rendering " <> show b
           _w <- createWindow programName
           displayCallback $= clear [ColorBuffer] -- TODO Why?
           rowAlignment Unpack $= 1 -- TODO What is this and why do we need this?
-          drawWorld width height (start b)
+          drawWorld width height =<< readTVarIO worldCell
+          mouseCallback $= Just (\k ks pos -> do
+                                    w <- readTVarIO worldCell
+                                    let newWorld = handleMouseEvent w k ks pos
+                                    print (newWorld, pos)
+                                    atomically $ writeTVar worldCell newWorld)
           mainLoop
             -- (uncurry4 makeColor brightRGBA)
             -- (uncurry4 makeColor darkRGBA)
